@@ -46,6 +46,18 @@ def create_graphdata():
     for i,j in data['kaarten'].items():
         datesofcards.append(datetime.strptime(j['created'][6:], '%Y-%m-%d, %H:%M:%S'))
     graphdata['meta'] = {'eerstedatum': min(datesofcards).date(),'huidigedatum': datetime.now().date()}
+    planneddates = {'startingdates': [], 'endingdates': []}
+    for i,j in data['kaarten'].items():
+        try:
+            planneddates['startingdates'].append(datetime.strptime(j['Begindatum'][6:], '%Y-%m-%d, %H:%M:%S'))
+        except:
+            pass 
+        try:
+            planneddates['endingdates'].append(datetime.strptime(j['Einddatum'][6:], '%Y-%m-%d, %H:%M:%S'))
+        except:
+            pass 
+    graphdata['meta']['firstdateplanned'] = min(planneddates['startingdates']).date()
+    graphdata['meta']['lastdateplanned'] = max(planneddates['endingdates']).date()
     layoutforlistsgraph = go.Layout(paper_bgcolor='rgba(0,0,0,0)', 
                                     plot_bgcolor='rgba(0,0,0,0)',
                                     autosize=True,
@@ -169,7 +181,7 @@ def make_layout():
         
         
         html.Div([
-            html.Button('Click Me', id='my-button'),
+            html.Button('Click me', id='my-button'),
             dcc.Markdown('''**Tijdstip van refresh: **''' + data['refreshed']['daterefreshed'])
 
             ]),
@@ -276,25 +288,51 @@ def make_layout():
 
                 html.Div([
                     html.H4('Uren per maand'),
-                    dcc.Markdown('Gebruik de Dropdown hieronder om de epics te kiezen.'),
                     html.Div([
-                        dcc.Dropdown(
-                            id='dropdownepicsfortimeline',
-                            options=[{'label':name, 'value':name} for name in data['epics'].keys()],
-                            multi=True,
-                            value = [next(iter(data['epics']))]
+                        dcc.Markdown('''**Uitleg:** Kies hieronder de epic(s) en de status(sen) die je wil zien. Rechts kun je de verschillende onderdelen aan of uit zetten.'''),
+                        html.Div(className='dropdownepicsdiv', children=[
+                            html.Div([
+                                dcc.Markdown('**Epic:**'),
+                                ],
+                                style={'display': 'inline-block','margin-left': '1%', 'width': '10%'}),
+                            html.Div([
+                                dcc.Dropdown(
+                                    id='dropdownepicsfortimeline',
+                                    options=[{'label':name, 'value':name} for name in data['epics'].keys()],
+                                    multi=True,
+                                    value = [next(iter(data['epics']))]
+                                        ),                               
+                                ],
+                                style={'display': 'inline-block', 'margin-right': '1%', 'width': '88%'}
                                 ),
-                        dcc.Markdown('Kies hieronder de statussen om te laten zien.'),
-                        dcc.Dropdown(
-                            id='dropdownstatusfortimeline',
-                            options=graphdata['optionsstatusesurenpermaand'],
-                            multi=True,
-                            searchable=False,
-                            value = ["Not Started", "Blocked", "Doing", "Done"]
-                            )
+                            
+                            ],
+                            style={'display': 'inline-block', 'width': '100%'}
+                        ),
+                        html.Div(className='dropdownstatusdiv', children=[
+                            html.Div([
+                                dcc.Markdown('**Status:**'),
+                                ],
+                                style={'display': 'inline-block','margin-left': '1%', 'width': '10%'}),
+                            html.Div([
+                                dcc.Dropdown(
+                                    id='dropdownstatusfortimeline',
+                                    options=graphdata['optionsstatusesurenpermaand'],
+                                    multi=True,
+                                    searchable=False,
+                                    value = ["Not Started", "Blocked", "Doing", "Done"]
+                                        ),                               
+                                ],
+                                style={'display': 'inline-block', 'margin-right': '1%', 'width': '88%'}
+                                ),
+                            
+                            ],
+                            style={'display': 'inline-block', 'width': '100%'}
+                        ),
+
                         ],
                         style={'margin-left': '1%',
-                                'margin-right': '1%',}
+                                }
                         
                         ),
                     dcc.Graph(id='epicstimeline')
@@ -312,8 +350,8 @@ def make_layout():
                     )
                 
                 ],
-                style={ 'width': '100%',
-                'display': 'inline-block', 
+                style={
+                
                 'box-shadow': '8px 8px 8px grey',
                 'background-image': """url('./assets/left.png')""",
                 'background-repeat': 'no-repeat',
@@ -332,7 +370,7 @@ def make_layout():
             html.Div([
 
                 html.Div([
-                    html.H4('Test GANTT chart'),
+                    html.H4('Gantt charts'),
                     dcc.Markdown('Gebruik de Dropdown hieronder om de epics te kiezen.'),
                     html.Div([
                         dcc.Dropdown(
@@ -344,7 +382,9 @@ def make_layout():
 
                         ],
                         style={'margin-left': '1%',
-                                'margin-right': '1%',}
+                                'margin-right': '1%',
+                                'margin-bottom': '1%',
+                        }
                         
                         ),
 
@@ -363,8 +403,7 @@ def make_layout():
                     )
                 
                 ],
-                style={ 'width': '100%',
-                'display': 'inline-block', 
+                style={ 
                 'box-shadow': '8px 8px 8px grey',
                 'background-image': """url('./assets/left.png')""",
                 'background-repeat': 'no-repeat',
@@ -648,8 +687,11 @@ def update_fig(input_value):
                   )    
     tmp.append(fig)
     
-    # layout = {'title': 'Kaarten'}
-    layout = go.Layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
+
+    layout = go.Layout(paper_bgcolor='rgba(0,0,0,0)', 
+                    plot_bgcolor='rgba(0,0,0,0)',
+                    xaxis_range=[graphdata['meta']['firstdateplanned'], graphdata['meta']['lastdateplanned']]
+                    )
 
     
     return {
@@ -671,7 +713,20 @@ def update_gantt(someinput):
                     ganttdata.append(dict(Task=j['name'], Start=j['Begindatum'][6:16], Finish=j['Einddatum'][6:16], Resource=j['status']))
                 except:
                     pass
-    return ff.create_gantt(ganttdata, index_col='Resource', show_colorbar=True, showgrid_x=True, showgrid_y=True)
+    title = 'Epic: '
+    
+    for i in someinput: 
+        if i != someinput[-1]:
+            title += i + ', '
+        else:
+            title += i
+            
+    fig = ff.create_gantt(ganttdata, index_col='Resource', show_colorbar=True, showgrid_x=True, 
+        showgrid_y=True,
+        title=title)
+    fig['layout'].update(paper_bgcolor='rgba(0,0,0,0)', 
+                        plot_bgcolor='rgba(0,0,0,0)',)
+    return fig
 
 
 
@@ -695,14 +750,12 @@ def update_timeline(v1,v2):
     for i,j in data['allcards'].items():
    
         if j['epic'] in v1 and j['status'] in v2:
-            
             traces.append(dict(x=data['dates']['all']['Months'],
                 y = j['periode'],
                 name=i,
                 line = {'shape': 'spline', 'smoothing': 0.5},
                 mode='lines',
-                stackgroup='one', 
-
+                stackgroup='one',
             ))
 
 
@@ -762,7 +815,7 @@ def update_hourscat(whatever):
 
 
 if __name__ == '__main__':
-    app.run_server(debug=True,host='0.0.0.0')
+    app.run_server(debug=True,host='0.0.0.0', port=8050)
 
 
 
