@@ -79,20 +79,33 @@ def create_graphdata():
             barsfornietingepland.append(dict(x=data['nietingepland']['labels'],
                         y=data['nietingepland']['data'].get(i),
                         name=i,
-                        type='bar'
+                        type='bar',
+                        opacity='0.6'
                         ))
                         
     optionsstatusesurenpermaand=[] 
     for name in data['statuses']:
         optionsstatusesurenpermaand.append({'label':name, 'value':name})   
-    
-    testdf = [dict(Task="Job A", Start='2009-01-01', Finish='2009-02-28'),
-        dict(Task="Job B", Start='2009-03-05', Finish='2009-04-15'),
-        dict(Task="Job C", Start='2009-02-20', Finish='2009-05-30')]
-    
-    graphdata['testfig'] = ff.create_gantt(testdf)
-    
-    
+    doingdatatable = []
+    for i,j in data['kaarten'].items():
+        if j['status'] == 'Doing':
+            try:
+                start = j['Begindatum'][6:16]
+            except:
+                start = j['Begindatum']
+            try:
+                stop = j['Einddatum'][6:16]
+            except:
+                stop = j['Einddatum']
+            
+            doingdatatable.append({'Kaart': j['name'],
+                              'Begindatum': start,
+                              'Einddatum': stop,
+                              'Epic': j['epic'],
+                              'URL': j['shortUrl']
+                             })
+
+    graphdata['doingdatatable'] = doingdatatable
     graphdata['listgraph'] = {'traces': tracesforlistsgraph, 'layout': layoutforlistsgraph}
     graphdata['nietingepland']= {'data': barsfornietingepland, 'layout': layoutforstackedbars}
     graphdata['optionsstatusesurenpermaand'] = optionsstatusesurenpermaand
@@ -624,7 +637,44 @@ def make_layout():
                 
                 #/ tab urenverdeling
             
-            
+                dcc.Tab(label='Doing (experimental)',children=[
+                    html.Div([
+                        dash_table.DataTable(
+                        id='doingtable',
+                        columns = [{'name': 'Kaart', 'id': 'Kaart'},
+                                   {'name': 'Begindatum','id':'Begindatum','hideable': True},
+                                   {'name': 'Einddatum','id':'Einddatum','hideable': True},
+                                   {'name': 'Epic','id':'Epic','hideable': True},
+                                   {'name': 'URL', 'id': 'URL','hideable': True}
+                                  ],
+                        hidden_columns=['URL'],
+                        export_format='xlsx',
+                        export_headers='display',
+                        data= graphdata['doingdatatable'],
+                        style_header={'backgroundColor': 'rgb(30, 30, 30)'},
+                        style_cell = {'backgroundColor': 'grey', 'color': 'white','text-align': 'left'}
+                        )],
+                        style={'margin-bottom': '15px',
+                        'margin-top': '1%', 
+                        'margin-left': '1%',
+                        'margin-right': '1%',
+                        }
+                        ),
+                
+                
+                    ],
+                
+                    style={'border-style': 'solid',
+                    'border-width': '2px',
+                    'background': 'rgb(255,255,255)',
+                    'background': 'radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(162,162,162,1) 100%, rgba(255,255,255,1) 100%)',
+                    'margin-top': '5px', 
+                    'margin-bottom': '5px', 
+                    'margin-right': '5px', 
+                    'margin-left': '5px',
+                    'border-radius': '6px'
+                    }                
+                    )
             
             
             ])#/dcctabs
@@ -789,7 +839,7 @@ def update_hourscat(whatever):
             
             ))
 
-        traces.append(dict(name='Geplande uren',
+        traces.append(dict(name='Beschikbare uren',
             mode = 'lines',
             x = data['dates']['all']['Months'],
             y = data['uren']['totaal']['periode'],
