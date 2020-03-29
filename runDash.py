@@ -9,16 +9,19 @@ import plotly.figure_factory as ff
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
 from dash.dependencies import Input, Output
 import dash_bootstrap_components as dbc
-from datetime import date,datetime,timedelta
+from datetime import date,datetime,timedelta,time
 
+## Read the credentials file to get user/pass
 with open('./configuration/credentials.txt') as json_file:
     creds = json.load(json_file)
 
+## Set user/pass
 USERNAMES = {creds.get('Username for Dash'): creds.get('Password for Dash')}
 
+## Set locale Dutch
 locale = locale.setlocale(locale.LC_ALL, 'nl_NL.UTF-8')
 
-
+## Function to read the data in ./data folder
 def refresh_data():
     with open('./data/date.txt', 'r') as f2:
         dateofdata = f2.read()
@@ -39,6 +42,7 @@ def refresh_data():
     data['refreshed'] = {'daterefreshed': daterefreshed, 'dateofdata': dateofdata}
     create_graphdata()
 
+## Create one function to create all data that is not updated using a function/callback (this data is generated one time)
 def create_graphdata():
     global graphdata
     graphdata = {}
@@ -113,7 +117,7 @@ def create_graphdata():
     
 
 
-
+## Set update interval to refresh data of the dashboard and create a function to update every x seconds
 UPDADE_INTERVAL = 5
 
 def get_new_data_every(period=UPDADE_INTERVAL):
@@ -123,124 +127,102 @@ def get_new_data_every(period=UPDADE_INTERVAL):
         refresh_data()
         time.sleep(period)
 
-
-refresh_data()
-
-
+## Create a function that contains the layout
 def make_layout():
     refresh_data()
-    
-    return html.Div([
+    return html.Div(className='First Div',children=[
         
-        html.Div([
-            html.Div(
-            className='row',
-            children = [
-                html.Div(
-                    className='tekst', children=[
-                        html.H1('Werkvoorraad'),
-
-                        ],
-                        style = {'display': 'inline-block',
-                            'width': '80%'
-                        }
-                        ,
-
-                    ),
-                html.Div(
-                    className='logo', children=[
-                        html.Img(src=app.get_asset_url('logonop.png'), style={'width': '150px','margin-right': '0px'})
-                    
-                    
-                    
-                    
+        html.Div(
+            className='Second Div?', 
+            children=[
+                html.Div(className='Banner',
+                    children = [
+                        html.Div(
+                            className='Banner text', 
+                            children=[
+                                html.H1('Werkvoorraad'),
+                                ],
+                            style = {'display': 'inline-block',
+                                    'width': '80%'
+                            },
+                        ), #/banner text
+                        html.Div(
+                            className='logo', 
+                            children=[
+                                html.Img(src=app.get_asset_url('logonop.png'), style={'width': '150px','margin-right': '0px'})
+                                ],
+                            style = {'display': 'inline-block',
+                                    'margin-right': '1px'                            
+                            }
+                        ), #/logo                    
                     ],
-                    style = {'display': 'inline-block',
-
-                    'margin-right': '1px'
-                        
-                        
-                    }
-                
-                
-                ),
-                
+                ), #/ banner
                 
                 
                 ],
-                
-
-                
-                
-
-            )
-            
-            
-            ],
             style={'font-style': 'italic',
-            'font-weight': 'bold',
-            'border': '10px', 
-            'box-shadow': '8px 8px 8px grey',
-            'background': 'rgb(149,193,31)',
-            'background': 'linear-gradient(133deg, rgba(62,182,235,1) 0%, rgba(243,253,255,1) 76%, rgba(243,253,255,0) 100%)',
-            'margin-top': '1%', 
-            'margin-bottom': '1%', 
-            'margin-right': '1%', 
-            'margin-left': '1%',
-            'border-radius': '10px',
-            'text-align': 'center'}
-            ),
-        
-        
-        
-        html.Div([
-            html.Button('Click me', id='my-button'),
-            dcc.Markdown('''**Tijdstip van refresh: **''' + data['refreshed']['daterefreshed'])
+                'font-weight': 'bold',
+                'border': '10px', 
+                'box-shadow': '8px 8px 8px grey',
+                'background': 'rgb(149,193,31)',
+                'background': 'linear-gradient(133deg, rgba(62,182,235,1) 0%, rgba(243,253,255,1) 76%, rgba(243,253,255,0) 100%)',
+                'margin-top': '1%', 
+                'margin-bottom': '1%', 
+                'margin-right': '1%', 
+                'margin-left': '1%',
+                'border-radius': '10px',
+                'text-align': 'center'
+            }
+            ), #/ second div?
 
-            ]),
-        dcc.Tabs([
-            dcc.Tab(label='Epics', children=[
-                
-                html.Div(
-                    className='row',
+        html.Div(
+            className='Refreshbutton', 
+            children=[
+                html.Button('Click me', id='my-button'),
+                dcc.Markdown('''**Tijdstip van refresh: **''' + data['refreshed']['daterefreshed'])
+                ]), #/ Refreshbutton
+        dcc.Tabs(
+            className='Tabs', 
+            children=[
+                dcc.Tab(
+                    label='Epics', 
                     children=[
                         html.Div(
-                            className='three columns',
+                            className='row',
                             children=[
-                                html.H4('Epics'),
-                                dcc.Markdown('''**Definitie:** Een overstijgend samenhangend geheel van projecten wat als geheel waarde oplevert voor de organisatie.'''),
-                                html.Div([
-                                    dash_table.DataTable(
-                                    id='duetable',
-                                    columns = [{'name': 'Epic', 'id': 'Epic'},{'name': 'Uren','id': 'Uren'}],
-                                    data= [{'Epic': j['name'], 'Uren': j['Geplande uren']} for j in data['belangrijkekaarten']['epics'].values()],
-                                    style_header={'backgroundColor': 'rgb(30, 30, 30)'},
-                                    style_cell = {'backgroundColor': 'grey', 'color': 'white','text-align': 'left'}
-                                    )],
-                                    style={'margin-bottom': '15px',
+                                html.Div(
+                                    className='three columns',
+                                    children=[
+                                        html.H4('Epics'),
+                                        dcc.Markdown('''**Definitie:** Een overstijgend samenhangend geheel van projecten wat als geheel waarde oplevert voor de organisatie.'''),
+                                        html.Div([
+                                            dash_table.DataTable(
+                                                id='duetable',
+                                                columns = [{'name': 'Epic', 'id': 'Epic'},{'name': 'Uren','id': 'Uren'}],
+                                                data= [{'Epic': j['name'], 'Uren': j['Geplande uren']} for j in data['belangrijkekaarten']['epics'].values()],
+                                                style_header={'backgroundColor': 'rgb(30, 30, 30)'},
+                                                style_cell = {'backgroundColor': 'grey', 'color': 'white','text-align': 'left'}
+                                            )],
+                                        style={'margin-bottom': '15px',
+                                        'margin-top': '1%', 
+                                        'margin-left': '1%',
+                                        'margin-right': '1%',
+                                        }
+                                        ), #/ 
+                                    ],
+                                    style={'width': '23%', 
+                                    'display': 'inline-block', 
+                                    'background-color': 'rgba(0,0,0,0)', 
                                     'margin-top': '1%', 
+                                    'margin-bottom': '1%', 
                                     'margin-left': '1%',
                                     'margin-right': '1%',
-                                    }
-                                    ),
-                                ],
-                                style={'width': '23%', 
-                                'display': 'inline-block', 
-  
-                                'background-color': 'rgba(0,0,0,0)', 
-                                'margin-top': '1%', 
-                                'margin-bottom': '1%', 
-                                'margin-left': '1%',
-                                'margin-right': '1%',
-                                'border-radius': '10px',
-                                'text-align': 'center',
-                                },
-                                ),
-                        
-                        
-                        
+                                    'border-radius': '10px',
+                                    'text-align': 'center',
+                                    },
+                                ), #/ three columns
                         html.Div(
-                            className='five columns',
+                            className='three columns',
                             children=[
                                 html.H4('Geschatte uren'),
                                 dcc.Markdown('Gebruik de Dropdown hieronder om de grafiek aan te passen.'),
@@ -253,245 +235,234 @@ def make_layout():
                                         )
                                     ],
                                     style={'margin-left': '1%',
-                                    'margin-right': '1%',}),#/dropdownepics
-                                    
+                                        'margin-right': '1%',
+                                        }
+                                    ), #/dropdownepics                                    
                                 html.Div([
                                     dcc.Graph(id='donutepichours')
-                                    
-                                    
                                     ],
                                     style={'margin-bottom': '15px',
-                                    'margin-top': '1%', 
-                                    'margin-left': '1%',
-                                    'margin-right': '1%',
-                                    }
-        
-                                    ),#/donutepichours   
-                                    
+                                        'margin-top': '1%', 
+                                        'margin-left': '1%',
+                                        'margin-right': '1%',
+                                        }        
+                                    ), #/donutepichours                                       
                             ],    
                                 
                             style={'width': '73%', 
-                            'display': 'inline-block', 
+                                'display': 'inline-block', 
+                                'background-color': 'rgba(62,182,235,0.1)', 
+                                'margin-top': '1%', 
+                                'margin-bottom': '1%', 
+                                'margin-left': '1%',
+                                'margin-right': '1%',
+                                'text-align': 'center',
+                                'border-radius': '10px'
+                                },
+                            ), #/three columns2
+                    ],
+                    style={'box-shadow': '8px 8px 8px grey',
+                        'background-image': """url('./assets/left.png')""",
+                        'background-repeat': 'no-repeat',
+                        'background-position': '0px 0px',
+                        'margin-top': '1%', 
+                        'margin-bottom': '1%', 
+                        'margin-right': '1%', 
+                        'margin-left': '1%',
+                        'border-radius': '10px'
+                        }
+                    ), #/row
 
+## second div in Epics tab
+                    html.Div([
+                        html.Div(
+                            className='urenpermaand', 
+                            children=[
+                                html.H4('Uren per maand'),
+                                html.Div(
+                                    className='filters', 
+                                    children=[
+                                        dcc.Markdown('''**Uitleg:** Kies hieronder de epic(s) en de status(sen) die je wil zien. Rechts kun je de verschillende onderdelen aan of uit zetten.'''),
+                                        html.Div(
+                                            className='dropdownepicsdiv', 
+                                            children=[
+                                                html.Div([
+                                                    dcc.Markdown('**Epic:**'),
+                                                ],
+                                                style={'display': 'inline-block',
+                                                    'margin-left': '1%', 
+                                                    'width': '10%'
+                                                    }
+                                                ), #/dropdownepicsdiv
+                                            html.Div([
+                                                dcc.Dropdown(
+                                                    id='dropdownepicsfortimeline',
+                                                    options=[{'label':name, 'value':name} for name in data['epics'].keys()],
+                                                    multi=True,
+                                                    value = [next(iter(data['epics']))]
+                                                ),                               
+                                                ],
+                                                style={'display': 'inline-block', 
+                                                    'margin-right': '1%', 
+                                                    'width': '88%'
+                                                    }
+                                                ),
+                                            ],
+                                            style={'display': 'inline-block', 
+                                                'width': '100%'
+                                                }
+                                        ),
+                                        html.Div(
+                                            className='dropdownstatusdiv', 
+                                            children=[
+                                                html.Div([
+                                                    dcc.Markdown('**Status:**'),
+                                                ],
+                                                style={'display': 'inline-block',
+                                                    'margin-left': '1%', 
+                                                    'width': '10%'
+                                                    }
+                                                ), #/dropdownstatusdiv
+                                                html.Div([
+                                                    dcc.Dropdown(
+                                                        id='dropdownstatusfortimeline',
+                                                        options=graphdata['optionsstatusesurenpermaand'],
+                                                        multi=True,
+                                                        searchable=False,
+                                                        value = ["Not Started", "Blocked", "Doing", "Done"]
+                                                    ),                               
+                                                ],
+                                                style={'display': 'inline-block', 
+                                                    'margin-right': '1%', 
+                                                    'width': '88%'
+                                                    }
+                                                ),
+                                            ],
+                                            style={'display': 
+                                                'inline-block', 
+                                                'width': '100%'
+                                                }
+                                        ),
+
+                                    ],
+                                    style={'margin-left': '1%',
+                                    }
+                                ), #/filters
+                            dcc.Graph(id='epicstimeline')
+                            ],
+                            style={
+                                'background-color': 'rgba(62,182,235,0.1)', 
+                                'margin-top': '1%', 
+                                'margin-bottom': '1%', 
+                                'margin-left': '1%',
+                                'margin-right': '1%',
+                                'border-radius': '10px'                   
+                                }          
+                        ) #/urenpermaand                
+                    ],
+                    style={                
+                        'box-shadow': '8px 8px 8px grey',
+                        'background-image': """url('./assets/left.png')""",
+                        'background-repeat': 'no-repeat',
+                        'background-position': '0px 0px',
+                        'margin-top': '1%', 
+                        'margin-bottom': '1%', 
+                        'margin-left': '1%',
+                        'margin-right': '1%',
+                        'text-align': 'center',
+                        'border-radius': '10px'                   
+                        }
+                    ), #/second div in epics tab                
+
+## Third Div in epics tab (GANTT)                
+                html.Div([
+                    html.Div([
+                        html.H4('Gantt charts'),
+                        dcc.Markdown('Gebruik de Dropdown hieronder om de epics te kiezen.'),
+                        html.Div([
+                            dcc.Dropdown(
+                                id='dropdownepicsforgantt',
+                                options=[{'label':name, 'value':name} for name in data['epics'].keys()],
+                                multi=True,
+                                value = [next(iter(data['epics']))]
+                            ),
+                            ],
+                            style={'margin-left': '1%',
+                                'margin-right': '1%',
+                                'margin-bottom': '1%',
+                                }
+                        ),
+                        dcc.Graph(id='epicgantt'),                    
+                        ],
+                        style={
+                            'background-color': 'rgba(62,182,235,0.1)', 
+                            'margin-top': '1%', 
+                            'margin-bottom': '1%', 
+                            'margin-left': '1%',
+                            'margin-right': '1%',
+                            'border-radius': '10px'                   
+                            }                    
+                        ) #/dropdowns for gantt
+                    ],
+                    style={ 
+                        'box-shadow': '8px 8px 8px grey',
+                        'background-image': """url('./assets/left.png')""",
+                        'background-repeat': 'no-repeat',
+                        'background-position': '0px 0px',
+                        'margin-top': '1%', 
+                        'margin-bottom': '1%', 
+                        'margin-left': '1%',
+                        'margin-right': '1%',
+                        'text-align': 'center',
+                        'border-radius': '10px'                   
+                        }
+                    ),            
+                ],
+                style={'border-style': 'solid',
+                    'border-width': '2px',
+                    'background': 'rgb(255,255,255)',
+                    'background': 'radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(162,162,162,1) 100%, rgba(255,255,255,1) 100%)',
+                    'margin-top': '5px', 
+                    'margin-bottom': '5px', 
+                    'margin-right': '5px', 
+                    'margin-left': '5px',
+                    'border-radius': '6px'
+                    }
+            ),#/tab epics
+            
+            dcc.Tab(label='Trellogebruik', children=[
+                html.Div([                    
+                    html.Div([                        
+                        html.H3('Aantal kaarten per lijst'),
+                        dcc.Markdown('''**Uitleg**'''),
+                        dcc.Markdown('''Deze grafiek geeft aan hoeveel kaarten er per lijst wanneer op Trello stonden. Rechts staan de lijsten uit Trello. Door op deze lijsten te klikken, kunnen ze aan of uit gezet worden.'''),
+                        dcc.Markdown('''**Let op: ** Dit is een weergave van **alle** lijsten! Ook de kaarten die klaar zijn!'''),
+                        dcc.Graph(id='graph_lists',figure={'data': graphdata['listgraph']['traces'],
+                                                    'layout': graphdata['listgraph']['layout']})                        
+                        ],
+                        style={
                             'background-color': 'rgba(62,182,235,0.1)', 
                             'margin-top': '1%', 
                             'margin-bottom': '1%', 
                             'margin-left': '1%',
                             'margin-right': '1%',
                             'text-align': 'center',
-                            'border-radius': '10px'
-        
-                            },
-                            ),#upperdiv
-                    ],
-                 
-                    style={'box-shadow': '8px 8px 8px grey',
-                    'background-image': """url('./assets/left.png')""",
-                    'background-repeat': 'no-repeat',
-                    'background-position': '0px 0px',
-                    'margin-top': '1%', 
-                    'margin-bottom': '1%', 
-                    'margin-right': '1%', 
-                    'margin-left': '1%',
-                    'border-radius': '10px'
-                    }
-                  
-                    ),
-            html.Div([
-
-                html.Div([
-                    html.H4('Uren per maand'),
-                    html.Div([
-                        dcc.Markdown('''**Uitleg:** Kies hieronder de epic(s) en de status(sen) die je wil zien. Rechts kun je de verschillende onderdelen aan of uit zetten.'''),
-                        html.Div(className='dropdownepicsdiv', children=[
-                            html.Div([
-                                dcc.Markdown('**Epic:**'),
-                                ],
-                                style={'display': 'inline-block','margin-left': '1%', 'width': '10%'}),
-                            html.Div([
-                                dcc.Dropdown(
-                                    id='dropdownepicsfortimeline',
-                                    options=[{'label':name, 'value':name} for name in data['epics'].keys()],
-                                    multi=True,
-                                    value = [next(iter(data['epics']))]
-                                        ),                               
-                                ],
-                                style={'display': 'inline-block', 'margin-right': '1%', 'width': '88%'}
-                                ),
-                            
-                            ],
-                            style={'display': 'inline-block', 'width': '100%'}
-                        ),
-                        html.Div(className='dropdownstatusdiv', children=[
-                            html.Div([
-                                dcc.Markdown('**Status:**'),
-                                ],
-                                style={'display': 'inline-block','margin-left': '1%', 'width': '10%'}),
-                            html.Div([
-                                dcc.Dropdown(
-                                    id='dropdownstatusfortimeline',
-                                    options=graphdata['optionsstatusesurenpermaand'],
-                                    multi=True,
-                                    searchable=False,
-                                    value = ["Not Started", "Blocked", "Doing", "Done"]
-                                        ),                               
-                                ],
-                                style={'display': 'inline-block', 'margin-right': '1%', 'width': '88%'}
-                                ),
-                            
-                            ],
-                            style={'display': 'inline-block', 'width': '100%'}
-                        ),
-
-                        ],
-                        style={'margin-left': '1%',
-                                }
-                        
-                        ),
-                    dcc.Graph(id='epicstimeline')
-                    
-                    ],
-                    style={
-                    'background-color': 'rgba(62,182,235,0.1)', 
-                    'margin-top': '1%', 
-                    'margin-bottom': '1%', 
-                    'margin-left': '1%',
-                    'margin-right': '1%',
-                    'border-radius': '10px'                   
-                    }          
-                    
-                    )
-                
-                ],
-                style={
-                
-                'box-shadow': '8px 8px 8px grey',
-                'background-image': """url('./assets/left.png')""",
-                'background-repeat': 'no-repeat',
-                'background-position': '0px 0px',
-                'margin-top': '1%', 
-                'margin-bottom': '1%', 
-                'margin-left': '1%',
-                'margin-right': '1%',
-                'text-align': 'center',
-                'border-radius': '10px'                   
-                }
-                ),
-                
-                ## testdf
-                
-            html.Div([
-
-                html.Div([
-                    html.H4('Gantt charts'),
-                    dcc.Markdown('Gebruik de Dropdown hieronder om de epics te kiezen.'),
-                    html.Div([
-                        dcc.Dropdown(
-                            id='dropdownepicsforgantt',
-                            options=[{'label':name, 'value':name} for name in data['epics'].keys()],
-                            multi=True,
-                            value = [next(iter(data['epics']))]
-                                ),
-
-                        ],
-                        style={'margin-left': '1%',
-                                'margin-right': '1%',
-                                'margin-bottom': '1%',
-                        }
-                        
-                        ),
-
-                    dcc.Graph(id='epicgantt'),
-                    
-                    ],
-                    style={
-                    'background-color': 'rgba(62,182,235,0.1)', 
-                    'margin-top': '1%', 
-                    'margin-bottom': '1%', 
-                    'margin-left': '1%',
-                    'margin-right': '1%',
-                    'border-radius': '10px'                   
-                    }          
-                    
-                    )
-                
-                ],
-                style={ 
-                'box-shadow': '8px 8px 8px grey',
-                'background-image': """url('./assets/left.png')""",
-                'background-repeat': 'no-repeat',
-                'background-position': '0px 0px',
-                'margin-top': '1%', 
-                'margin-bottom': '1%', 
-                'margin-left': '1%',
-                'margin-right': '1%',
-                'text-align': 'center',
-                'border-radius': '10px'                   
-                }
-                ),
-            
-            ],
-                style={'border-style': 'solid',
-                    'border-width': '2px',
-                    'background': 'rgb(255,255,255)',
-                    'background': 'radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(162,162,162,1) 100%, rgba(255,255,255,1) 100%)',
-                    'margin-top': '5px', 
-                    'margin-bottom': '5px', 
-                    'margin-right': '5px', 
-                    'margin-left': '5px',
-                    'border-radius': '6px'
-                    }
-                
-
-            
-            ),#/tab epics
-            
-            dcc.Tab(label='Trellogebruik', children=[
-                html.Div([
-
-                    
-                    html.Div([
-                        
-                        html.H3('Aantal kaarten per lijst'),
-                        dcc.Markdown('''**Uitleg**'''),
-                        dcc.Markdown('''Deze grafiek geeft aan hoeveel kaarten er per lijst wanneer op Trello stonden. Rechts staan de lijsten uit Trello. Door op deze lijsten te klikken, kunnen ze aan of uit gezet worden.'''),
-                        dcc.Markdown('''**Let op: ** Dit is een weergave van **alle** lijsten! Ook de kaarten die klaar zijn!'''),
-
-                        dcc.Graph(id='graph_lists',figure={'data': graphdata['listgraph']['traces'],
-                                                    'layout': graphdata['listgraph']['layout']})
-                        
-                        ],
-                        style={
-                        
-
-                        'background-color': 'rgba(62,182,235,0.1)', 
-                        'margin-top': '1%', 
-                        'margin-bottom': '1%', 
-                        'margin-left': '1%',
-                        'margin-right': '1%',
-                        'text-align': 'center',
-                        'border-radius': '10px'                   
-                        }
-                                
+                            'border-radius': '10px'                   
+                            }                                
                         )
                     
                     ],
                     style={'box-shadow': '8px 8px 8px grey',
-                    'background-image': """url('./assets/left.png')""",
-                    'background-repeat': 'no-repeat',
-                    'background-position': '0px 0px',
-                    'margin-top': '1%', 
-                    'margin-bottom': '1%', 
-                    'margin-right': '1%', 
-                    'margin-left': '1%',
-                    'border-radius': '10px'
-                    }
+                        'background-image': """url('./assets/left.png')""",
+                        'background-repeat': 'no-repeat',
+                        'background-position': '0px 0px',
+                        'margin-top': '1%', 
+                        'margin-bottom': '1%', 
+                        'margin-right': '1%', 
+                        'margin-left': '1%',
+                        'border-radius': '10px'
+                        }
                     ),
-               
-                
-                
-                
-                
                 ],
                 style={'border-style': 'solid',
                     'border-width': '2px',
@@ -503,101 +474,79 @@ def make_layout():
                     'margin-left': '5px',
                     'border-radius': '6px'
                     }
-            ),#/tab allekaarten
-            
-            dcc.Tab(label='Urenverdeling',children=[
-                
-                html.Div([
+            ),#/tab trellogebruik
 
-                    
-                    html.Div([html.Div([
-                        
+            dcc.Tab(label='Urenverdeling',children=[
+                html.Div([                   
+                    html.Div([html.Div([                        
                         html.H4('Uren per categorie'),
                         dcc.Markdown('Gebruik de Dropdown hieronder om de grafiek aan te passen.'),
                         dcc.Dropdown(
                             id='dropdownhourscat',
-                            options=[{'label': 'Per dag', 'value': 'Datum'}, {'label': 'Per maand', 'value': 'periode'}],
-                            
+                            options=[{'label': 'Per dag', 'value': 'Datum'}, {'label': 'Per maand', 'value': 'periode'}],                            
                             value = 'periode'
-                                ),
+                            ),
                         ],
                         style={'margin-left': '1%',
                                 'margin-right': '1%',
                                 'margin-top': '1%',
                                 'margin-bottom': '1%'
-                        }
-                        
-                        ),                        
-
-
+                            }                        
+                        ),
                         dcc.Graph(id='graph_cat')
                         ],
-                                                style={
-                        
-
-                        'background-color': 'rgba(62,182,235,0.1)', 
-                        'margin-top': '1%', 
-                        'margin-bottom': '1%', 
-                        'margin-left': '1%',
-                        'margin-right': '1%',
-                        'text-align': 'center',
-                        'border-radius': '10px'                   
-                        }
-                        
-                        )
-                        ],
                         style={
-                        
-                        'box-shadow': '8px 8px 8px grey',
-                        'background-image': """url('./assets/left.png')""",
-                        'background-repeat': 'no-repeat',
-                        'background-position': '0px 0px',
-                        'margin-top': '1%', 
-                        'margin-bottom': '1%', 
-                        'margin-left': '1%',
-                        'margin-right': '1%',
-                        'text-align': 'center',
-                        'border-radius': '10px'                   
-                        }
-                                
-                        ),
+                            'background-color': 'rgba(62,182,235,0.1)', 
+                            'margin-top': '1%', 
+                            'margin-bottom': '1%', 
+                            'margin-left': '1%',
+                            'margin-right': '1%',
+                            'text-align': 'center',
+                            'border-radius': '10px'                   
+                            }                        
+                    )
+                ],
+                style={                        
+                    'box-shadow': '8px 8px 8px grey',
+                    'background-image': """url('./assets/left.png')""",
+                    'background-repeat': 'no-repeat',
+                    'background-position': '0px 0px',
+                    'margin-top': '1%', 
+                    'margin-bottom': '1%', 
+                    'margin-left': '1%',
+                    'margin-right': '1%',
+                    'text-align': 'center',
+                    'border-radius': '10px'                   
+                    }
+                ), #/ first div tab Urenverdeling
                 html.Div([
-
-                    
-                    html.Div([html.Div([
-                        
-                        html.H4('(nog) niet ingeplande uren'),
-                        
-
-                        ],
-                        style={'margin-left': '1%',
+                    html.Div([
+                        html.Div([                        
+                            html.H4('(nog) niet ingeplande uren'),
+                            ],
+                            style={'margin-left': '1%',
                                 'margin-right': '1%',
                                 'margin-top': '1%',
                                 'margin-bottom': '1%'
-                            
-                        }
-                        
-                        ),                        
-
-
-                        dcc.Graph(id='graph_nietingepland',figure={'data': graphdata['nietingepland']['data'], 'layout': graphdata['nietingepland']['layout']})
-                        ],
-                                                style={
-                        
-
-                        'background-color': 'rgba(62,182,235,0.1)', 
-                        'margin-top': '1%', 
-                        'margin-bottom': '1%', 
-                        'margin-left': '1%',
-                        'margin-right': '1%',
-                        'text-align': 'center',
-                        'border-radius': '10px'                   
-                        }
-                        
-                        )
+                                }
+                            ),                        
+                        dcc.Graph(
+                            id='graph_nietingepland',
+                            figure={'data': graphdata['nietingepland']['data'], 'layout': graphdata['nietingepland']['layout']}
+                            )
                         ],
                         style={
-                        
+                            'background-color': 'rgba(62,182,235,0.1)', 
+                            'margin-top': '1%', 
+                            'margin-bottom': '1%', 
+                            'margin-left': '1%',
+                            'margin-right': '1%',
+                            'text-align': 'center',
+                            'border-radius': '10px'                   
+                            }
+                        )
+                    ],
+                    style={                        
                         'box-shadow': '8px 8px 8px grey',
                         'background-image': """url('./assets/left.png')""",
                         'background-repeat': 'no-repeat',
@@ -608,34 +557,22 @@ def make_layout():
                         'margin-right': '1%',
                         'text-align': 'center',
                         'border-radius': '10px'                   
-                        }
-                                
-                        ),
-                        
-                    
-                    ],
-                    style={'border-style': 'solid',
-                    'border-width': '2px',
-                    'background': 'rgb(255,255,255)',
-                    'background': 'radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(162,162,162,1) 100%, rgba(255,255,255,1) 100%)',
-                    'margin-top': '5px', 
-                    'margin-bottom': '5px', 
-                    'margin-right': '5px', 
-                    'margin-left': '5px',
-                    'border-radius': '6px'
-                    }
-                    ),
+                        }            
+                    ), #/second div tab urenverdeling
+            ],
+            style={'border-style': 'solid',
+                'border-width': '2px',
+                'background': 'rgb(255,255,255)',
+                'background': 'radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(162,162,162,1) 100%, rgba(255,255,255,1) 100%)',
+                'margin-top': '5px', 
+                'margin-bottom': '5px', 
+                'margin-right': '5px', 
+                'margin-left': '5px',
+                'border-radius': '6px'
+                }
+            ), #/ tab urenverdeling
                 
-                
-                
-                
-                
-                #/ children urenverdeling
-                
-                
-                
-                
-                #/ tab urenverdeling
+
             
                 dcc.Tab(label='Doing (experimental)',children=[
                     html.Div([

@@ -136,3 +136,7 @@ configuration/
 ## A notebook for testing purposes
 
 test.ipynb
+
+## VSCode
+
+.vscode/
