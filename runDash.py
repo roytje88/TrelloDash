@@ -26,7 +26,7 @@ def refresh_data():
     with open('./data/date.txt', 'r') as f2:
         dateofdata = f2.read()
 
-    daterefreshed = datetime.strftime(datetime.strptime(dateofdata,'%Y-%m-%d, %H:%M:%S'),'%A %-d %B, %H:%M')
+    daterefreshed = 'Refreshen. Laatste refresh: ' + datetime.strftime(datetime.strptime(dateofdata,'%Y-%m-%d, %H:%M:%S'),'%A %-d %B, %H:%M')
     if datetime.strptime(dateofdata,'%Y-%m-%d, %H:%M:%S') < datetime.now() - timedelta(hours=1):
         import createjsons
     global data
@@ -92,7 +92,6 @@ def create_graphdata():
         optionsstatusesurenpermaand.append({'label':name, 'value':name})   
     doingdatatable = []
     for i,j in data['kaarten'].items():
-        if j['status'] == 'Doing':
             try:
                 start = j['Begindatum'][6:16]
             except:
@@ -106,7 +105,14 @@ def create_graphdata():
                               'Begindatum': start,
                               'Einddatum': stop,
                               'Epic': j['epic'],
-                              'URL': j['shortUrl']
+                              'URL': j['shortUrl'],
+                              'Categorie': j['Category'],
+                              'Hoofdverantwoordelijke': j['Hoofdverantwoordelijke'],
+                              'Cognosrapport': j['Cognosrapport'],
+                              'Geplande uren': j['Geplande uren'],
+                              'Status': j['status'],
+                              'Lijst': j['list'],
+                              'Gearchiveerd': j['closed']
                              })
 
     graphdata['doingdatatable'] = doingdatatable
@@ -115,7 +121,7 @@ def create_graphdata():
     graphdata['optionsstatusesurenpermaand'] = optionsstatusesurenpermaand
                                           
     
-
+refresh_data()
 
 ## Set update interval to refresh data of the dashboard and create a function to update every x seconds
 UPDADE_INTERVAL = 5
@@ -178,9 +184,11 @@ def make_layout():
         html.Div(
             className='Refreshbutton', 
             children=[
-                html.Button('Click me', id='my-button'),
-                dcc.Markdown('''**Tijdstip van refresh: **''' + data['refreshed']['daterefreshed'])
-                ]), #/ Refreshbutton
+                html.Button(data['refreshed']['daterefreshed'], id='my-button'),
+
+                ],
+                style={'margin-bottom': '1%'}
+                ), #/ Refreshbutton
         dcc.Tabs(
             className='Tabs', 
             children=[
@@ -377,8 +385,9 @@ def make_layout():
 ## Third Div in epics tab (GANTT)                
                 html.Div([
                     html.Div([
-                        html.H4('Gantt charts'),
-                        dcc.Markdown('Gebruik de Dropdown hieronder om de epics te kiezen.'),
+                        html.H4('Gantt chart per epic'),
+                        
+                        dcc.Markdown('''Onderstaand is een Gantt chart te zien van alle kaarten die aan de gekozen epic(s) gekoppeld zijn. Gebruik de Dropdown hieronder om de epics te kiezen.'''),
                         html.Div([
                             dcc.Dropdown(
                                 id='dropdownepicsforgantt',
@@ -416,7 +425,52 @@ def make_layout():
                         'text-align': 'center',
                         'border-radius': '10px'                   
                         }
-                    ),            
+                    ),   
+### TEST         
+                html.Div([
+                    html.Div([
+                        html.H4('Gantt chart op totaalniveau'),
+                        dcc.Markdown('''Onderstaand is een Gantt chart te zien van de gekozen epic(s). Gebruik de Dropdown hieronder om de epics te kiezen.'''),
+                        html.Div([
+                            dcc.Dropdown(
+                                id='dropdownepicsforgantttotal',
+                                options=[{'label':name, 'value':name} for name in data['epics'].keys()],
+                                multi=True,
+                                value = [name for name in data['epics'].keys()]
+                            ),
+                            ],
+                            style={'margin-left': '1%',
+                                'margin-right': '1%',
+                                'margin-bottom': '1%',
+                                }
+                        ),
+                        dcc.Graph(id='gantttotal'),                    
+                        ],
+                        style={
+                            'background-color': 'rgba(62,182,235,0.1)', 
+                            'margin-top': '1%', 
+                            'margin-bottom': '1%', 
+                            'margin-left': '1%',
+                            'margin-right': '1%',
+                            'border-radius': '10px'                   
+                            }                    
+                        ) #/dropdowns for gantt
+                    ],
+                    style={ 
+                        'box-shadow': '8px 8px 8px grey',
+                        'background-image': """url('./assets/left.png')""",
+                        'background-repeat': 'no-repeat',
+                        'background-position': '0px 0px',
+                        'margin-top': '1%', 
+                        'margin-bottom': '1%', 
+                        'margin-left': '1%',
+                        'margin-right': '1%',
+                        'text-align': 'center',
+                        'border-radius': '10px'                   
+                        }
+                    ), 
+## end of test
+
                 ],
                 style={'border-style': 'solid',
                     'border-width': '2px',
@@ -574,19 +628,27 @@ def make_layout():
                 
 
             
-                dcc.Tab(label='Doing (experimental)',children=[
+                dcc.Tab(label='Exporteer data (in progress)',children=[
                     html.Div([
                         dash_table.DataTable(
                         id='doingtable',
-                        columns = [{'name': 'Kaart', 'id': 'Kaart'},
+                        columns = [{'name': 'Kaart', 'id': 'Kaart','hideable': True},
                                    {'name': 'Begindatum','id':'Begindatum','hideable': True},
                                    {'name': 'Einddatum','id':'Einddatum','hideable': True},
                                    {'name': 'Epic','id':'Epic','hideable': True},
-                                   {'name': 'URL', 'id': 'URL','hideable': True}
+                                   {'name': 'URL', 'id': 'URL','hideable': True},
+                                   {'name': 'Categorie', 'id': 'Categorie', 'hideable': True},
+                                   {'name': 'Hoofdverantwoordelijke', 'id': 'Hoofdverantwoordelijke', 'hideable': True},
+                                   {'name': 'Cognosrapport', 'id': 'Cognosrapport', 'hideable': True},
+                                   {'name': 'Geplande uren', 'id': 'Geplande uren', 'hideable': True},
+                                   {'name': 'Status', 'id': 'Status', 'hideable': True},
+                                   {'name': 'Lijst', 'id': 'Lijst', 'hideable': True},
+                                   {'name': 'Gearchiveerd', 'id': 'Gearchiveerd', 'hideable': True}
                                   ],
-                        hidden_columns=['URL'],
+                        hidden_columns=['Kaart', 'Begindatum', 'Einddatum', 'Epic', 'URL', 'Categorie', 'Hoofdverantwoordelijke', 'Cognosrapport', 'Geplande uren','Status','Lijst','Gearchiveerd'],
                         export_format='xlsx',
                         export_headers='display',
+                        export_columns='all',
                         data= graphdata['doingdatatable'],
                         style_header={'backgroundColor': 'rgb(30, 30, 30)'},
                         style_cell = {'backgroundColor': 'grey', 'color': 'white','text-align': 'left'}
@@ -647,12 +709,10 @@ executor.submit(get_new_data_every)
 def on_click(n_clicks):
     if n_clicks != None:
         import createjsons
-        refresh_data()
-        make_layout()
-        return 'Data refreshen'
-        
-    else:
-        return 'Data refreshen'
+    refresh_data()
+
+    return data['refreshed']['daterefreshed']
+
 
 
 
@@ -716,6 +776,35 @@ def update_gantt(someinput):
     return fig
 
 
+@app.callback(Output('gantttotal','figure'),
+    [Input('dropdownepicsforgantttotal','value')])
+
+def update_gantt_total(someinput):
+
+    ganttdata= []
+    total_hours=0
+    for i,j in data['allepics'].items():
+        if j['name'] in someinput:
+            try:
+                total_hours += j['Geplande uren']
+            except:
+                pass 
+    
+    for i,j in data['allepics'].items():
+        if j['name'] in someinput:
+                try:
+                    ganttdata.append(dict(Task=j['name'], Start=j['Begindatum'][6:16], Finish=j['Einddatum'][6:16], Resource=j['Categorie'] ))
+                except:
+                    pass
+    title = 'Totaalniveau'
+
+            
+    fig = ff.create_gantt(ganttdata, showgrid_x=True, index_col='Resource', show_colorbar=True,
+        showgrid_y=True,
+        title=title)
+    fig['layout'].update(paper_bgcolor='rgba(0,0,0,0)', 
+                        plot_bgcolor='rgba(0,0,0,0)',)
+    return fig
 
         
 @app.callback(Output('epicstimeline','figure'),

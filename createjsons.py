@@ -8,6 +8,7 @@
 import requests,json,os, pprint,requests
 import pandas as pd
 from datetime import date,datetime,timedelta
+import copy
 
 configurationfile = './configuration/configuration.txt'
 credentialsfile = './configuration/credentials.txt'
@@ -431,23 +432,35 @@ for i,j in kaarten.items():
         
 epicdates = {}
 for i,j in epics.items():
-    epicdates[i] = {'Starts': [], 'Ends': []}
+    epicdates[i] = {'Starts': [], 'Ends': [],'hours': 0}
     for k,l in kaarten.items():
         if i == l['epicid']:
             if l[config.get('Custom Field for Starting date')] != None:
                 epicdates[i]['Starts'].append(l[config.get('Custom Field for Starting date')])
             if l['Einddatum'] != None:
                 epicdates[i]['Ends'].append(l[config.get('Custom Field for Ending date')])
+            try:
+                epicdates[i]['hours'] += int(l['Geplande uren'])
+            except:
+                pass
+            
     if epicdates[i]['Starts'] != []:
         epicdates[i]['Starts'] = min(epicdates[i]['Starts'])
+    else:
+        epicdates[i]['Starts'] = None
     if epicdates[i]['Ends'] != []:
         epicdates[i]['Ends'] = max (epicdates[i]['Ends'])
+    else:
+        epicdates[i]['Ends'] = None
         
 for i,j in epics.items():
     for k,l in epicdates.items():
         if i == k:
             j['Begindatum'] = l['Starts']
-            j['Einddatum'] = l['Ends']         
+            j['Einddatum'] = l['Ends'] 
+            j['Geplande uren'] = l['hours']
+
+jsonforallepics = copy.deepcopy(epics)
 
 
 # In[ ]:
@@ -913,6 +926,26 @@ for i,j in kaarten.items():
         else:
             jsoncards[i][k] = l
 
+jsonallepics = {}
+for i,j in jsonforallepics.items():
+    try:
+        del j['listmovements']
+    except:
+        pass
+    try:
+        del j['movements']
+    except:
+        pass
+
+    jsonallepics[i] = {}
+    for k,l in j.items():
+        if type(l) == datetime:
+            jsonallepics[i][k] = 'date, ' + l.strftime("%Y-%m-%d, %H:%M:%S")
+        else:
+            jsonallepics[i][k] = l    
+
+
+
 def dumpjson(file, data):
     with open('./data/'+file, 'w') as outfile:
         json.dump(data, outfile, sort_keys=True) 
@@ -928,6 +961,7 @@ dumpjson('belangrijkekaarten.json',jsonimportantcards)
 dumpjson('allcards.json',jsonallcards)
 dumpjson('statuses.json',jsonstatuses)
 dumpjson('meta.json',jsonmeta)
+dumpjson('allepics.json',jsonallepics)
 
 
 
