@@ -1,8 +1,11 @@
 #!/usr/bin/env python
 # coding: utf-8
+
 # In[ ]:
 
-import requests,json,os,pprint
+
+
+import requests,json,os, pprint,requests
 import pandas as pd
 from datetime import date,datetime,timedelta
 import copy
@@ -423,6 +426,47 @@ historicallists = list(dict.fromkeys(historicallists))
 # In[ ]:
 
 
+for i,j in kaarten.items():
+    j['datedone'] = None
+    j['datestarted'] = None
+    j['datelastblocked'] = None
+    j['datelastunblocked'] = None
+
+    if j['status'] == 'Done':
+        tmp = []
+        for k,l in j['movements'].items():
+            if l['listAfter'] in config['Done']:
+                tmp.append(k)
+        j['datedone'] = max(tmp)
+
+    if j['status'] != 'Done' or 'Archived':
+        tmp = []
+        for k,l in j['movements'].items():
+            if l['listAfter'] in config['Doing']:
+                tmp.append(k)
+        if tmp != []:
+            j['datestarted'] = min(tmp)
+
+    if j['datestarted'] == None:
+        if j['status'] != 'Archived':
+            if j['status'] != 'Not started':
+                j['datestarted'] = j['created']
+    tmp = []
+    if j['status'] != 'Blocked':
+        for k,l in j['movements'].items():
+            if l['listBefore'] in config['Blocked']:
+                tmp.append(k)
+                j['datelastunblocked'] = max(tmp)
+    tmp = []
+    for k,l in j['movements'].items():
+        if l['listAfter'] in config['Blocked']:
+            tmp.append(k)
+            j['datelastblocked'] = max(tmp)
+
+
+# In[ ]:
+
+
 epics = {}
 for i,j in kaarten.items():
     if j['list'] in config.get('Epics') or j['list'] in config.get('List with Epics Done'):
@@ -562,12 +606,6 @@ for i,j in jsonallcards.items():
         cardstodelete.append(i)
 for i in cardstodelete:
     del jsonallcards[i]        
-
-
-# In[ ]:
-
-
-
 
 
 # In[ ]:
