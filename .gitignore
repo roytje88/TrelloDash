@@ -141,3 +141,6 @@ test.py
 ## VSCode
 
 .vscode/
+
+## Folder for testing purposes
+test/

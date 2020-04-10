@@ -1,11 +1,8 @@
 #!/usr/bin/env python
 # coding: utf-8
-
 # In[ ]:
 
-
-
-import requests,json,os, pprint,requests
+import requests,json,os,pprint
 import pandas as pd
 from datetime import date,datetime,timedelta
 import copy
@@ -62,63 +59,63 @@ def updateconfig(file,olddict,newdict):
     if ans.upper() == 'Y':
         print('This is your old config:')
         pprint.pprint(olddict)
-    newconfig = {'Script options': {}}
-    newconfig['Version'] = newdict.get('Version')
-    newconfig['__Comment'] = newdict['__Comment']
-    keystoupdate = []
-    for i,j in newdict.items():
-        if not i in olddict.keys():
-            keystoupdate.append(i)
-    for i,j in olddict.items():
-        if type(j) == dict:
-            for k,l in j.items():
-                if l == True:
-                    newconfig[i][k] = True
-                else:
-                    keystoupdate.append(k)
-        elif type(j) == list:
-            if j == []:
+        newconfig = {'Script options': {}}
+        newconfig['Version'] = newdict.get('Version')
+        newconfig['__Comment'] = newdict['__Comment']
+        keystoupdate = []
+        for i,j in newdict.items():
+            if not i in olddict.keys():
                 keystoupdate.append(i)
-            else:
-                newconfig[i] = j
-        else:
-            if j != '':
-                newconfig[i] = j
-            else:
-                keystoupdate.append(i)
-    for i,j in newdict.items():
-        if type(j) == list:
-            if i in keystoupdate:
-                newconfig[i] = []
-                value = input('Give the number of lists to add for the status '+i)
-                if value != '0':
-                    try:
-                        x = int(value)
-                    except:
-                        x = int(input('Not an integer. Please try again!'))
-                    count = 1
-                    while count <= x:
-                        newconfig[i].append(input('Give the name of one list each time for the status ' + i))
-                        count += 1
-        elif type(j) == dict:
-            newconfig[i] = {}
-            for k,l in j.items():
-                try:
-                    if k not in olddict['Script options'].keys():
-                        keystoupdate.append(k)
-                except:
-                    keystoupdate.append(k)
-                if k in keystoupdate:
-                    answer = input(k + ' (Y/N)').upper()
-                    if answer == 'Y':
+        for i,j in olddict.items():
+            if type(j) == dict:
+                for k,l in j.items():
+                    if l == True:
                         newconfig[i][k] = True
                     else:
-                        newconfig[i][k] = False
-        else:
-            if i in keystoupdate:
-                newconfig[i] = input(i)
-    with open(file, 'w') as outfile:
-        json.dump(newconfig, outfile, indent=4, sort_keys=True)
+                        keystoupdate.append(k)
+            elif type(j) == list:
+                if j == []:
+                    keystoupdate.append(i)
+                else:
+                    newconfig[i] = j
+            else:
+                if j != '':
+                    newconfig[i] = j
+                else:
+                    keystoupdate.append(i)
+        for i,j in newdict.items():
+            if type(j) == list:
+                if i in keystoupdate:
+                    newconfig[i] = []
+                    value = input('Give the number of lists to add for the status '+i)
+                    if value != '0':
+                        try:
+                            x = int(value)
+                        except:
+                            x = int(input('Not an integer. Please try again!'))
+                        count = 1
+                        while count <= x:
+                            newconfig[i].append(input('Give the name of one list each time for the status ' + i))
+                            count += 1
+            elif type(j) == dict:
+                newconfig[i] = {}
+                for k,l in j.items():
+                    try:
+                        if k not in olddict['Script options'].keys():
+                            keystoupdate.append(k)
+                    except:
+                        keystoupdate.append(k)
+                    if k in keystoupdate:
+                        answer = input(k + ' (Y/N)').upper()
+                        if answer == 'Y':
+                            newconfig[i][k] = True
+                        else:
+                            newconfig[i][k] = False
+            else:
+                if i in keystoupdate:
+                    newconfig[i] = input(i)
+        with open(file, 'w') as outfile:
+            json.dump(newconfig, outfile, indent=4, sort_keys=True)
 
 
 
