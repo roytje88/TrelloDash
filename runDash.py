@@ -282,7 +282,7 @@ def make_layout():
                         }
                     ), #/row
 
-## second div in Epics tab
+## second div in Epics tab (uren per maand)
                     html.Div([
                         html.Div(
                             className='urenpermaand', 
@@ -631,36 +631,120 @@ def make_layout():
             
                 dcc.Tab(label='Exporteer data (in progress)',children=[
                     html.Div([
-                        dash_table.DataTable(
-                        id='doingtable',
-                        columns = [{'name': 'Kaart', 'id': 'Kaart','hideable': True},
-                                   {'name': 'Begindatum','id':'Begindatum','hideable': True},
-                                   {'name': 'Einddatum','id':'Einddatum','hideable': True},
-                                   {'name': 'Epic','id':'Epic','hideable': True},
-                                   {'name': 'URL', 'id': 'URL','hideable': True},
-                                   {'name': 'Categorie', 'id': 'Categorie', 'hideable': True},
-                                   {'name': 'Hoofdverantwoordelijke', 'id': 'Hoofdverantwoordelijke', 'hideable': True},
-                                   {'name': 'Cognosrapport', 'id': 'Cognosrapport', 'hideable': True},
-                                   {'name': 'Geplande uren', 'id': 'Geplande uren', 'hideable': True},
-                                   {'name': 'Status', 'id': 'Status', 'hideable': True},
-                                   {'name': 'Lijst', 'id': 'Lijst', 'hideable': True},
-                                   {'name': 'Gearchiveerd', 'id': 'Gearchiveerd', 'hideable': True}
-                                  ],
-                        hidden_columns=['Kaart', 'Begindatum', 'Einddatum', 'Epic', 'URL', 'Categorie', 'Hoofdverantwoordelijke', 'Cognosrapport', 'Geplande uren','Status','Lijst','Gearchiveerd'],
-                        export_format='xlsx',
-                        export_headers='display',
-                        export_columns='all',
-                        data= graphdata['doingdatatable'],
-                        style_header={'backgroundColor': 'rgb(30, 30, 30)'},
-                        style_cell = {'backgroundColor': 'grey', 'color': 'white','text-align': 'left'}
-                        )],
-                        style={'margin-bottom': '15px',
-                        'margin-top': '1%', 
+                        html.Div([
+                            html.H4('Alle kaarten'),
+                            dcc.Markdown('Klik op Export om een dump van alle kaarten te downloaden.'),
+                            dash_table.DataTable(
+                            id='exportallcards',
+                            columns = [{'name': 'Kaart', 'id': 'Kaart','hideable': True},
+                                       {'name': 'Begindatum','id':'Begindatum','hideable': True},
+                                       {'name': 'Einddatum','id':'Einddatum','hideable': True},
+                                       {'name': 'Epic','id':'Epic','hideable': True},
+                                       {'name': 'URL', 'id': 'URL','hideable': True},
+                                       {'name': 'Categorie', 'id': 'Categorie', 'hideable': True},
+                                       {'name': 'Hoofdverantwoordelijke', 'id': 'Hoofdverantwoordelijke', 'hideable': True},
+                                       {'name': 'Cognosrapport', 'id': 'Cognosrapport', 'hideable': True},
+                                       {'name': 'Geplande uren', 'id': 'Geplande uren', 'hideable': True},
+                                       {'name': 'Status', 'id': 'Status', 'hideable': True},
+                                       {'name': 'Lijst', 'id': 'Lijst', 'hideable': True},
+                                       {'name': 'Gearchiveerd', 'id': 'Gearchiveerd', 'hideable': True}
+                                      ],
+                            hidden_columns=['Kaart', 'Begindatum', 'Einddatum', 'Epic', 'URL', 'Categorie', 'Hoofdverantwoordelijke', 'Cognosrapport', 'Geplande uren','Status','Lijst','Gearchiveerd'],
+                            export_format='xlsx',
+                            export_headers='display',
+                            export_columns='all',
+                            data= graphdata['doingdatatable'],
+                            style_header={'backgroundColor': 'rgb(30, 30, 30)'},
+                            style_cell = {'backgroundColor': 'grey', 'color': 'white','text-align': 'left'}
+                            ),
+                        ],
+                        style={
+                            'background-color': 'rgba(62,182,235,0.1)', 
+                            'margin-top': '5%', 
+                            'margin-bottom': '5%', 
+                            'margin-left': '1%',
+                            'margin-right': '1%',
+                            'text-align': 'center',
+                            'border-radius': '10px'                   
+                            }
+                        
+                        ),
+                            
+                    ],
+                    style={                        
+                        'box-shadow': '8px 8px 8px grey',
+                        'background-image': """url('./assets/left.png')""",
+                        'background-repeat': 'no-repeat',
+                        'background-position': '0px 0px',
+                        'margin-top': '5%', 
+                        'margin-bottom': '5%', 
                         'margin-left': '1%',
                         'margin-right': '1%',
-                        }
+                        'text-align': 'center',
+                        'border-radius': '10px'                   
+                        } 
+                    ),
+                    html.Div([
+                        html.Div([
+                            html.H4('Kaarten per status'),
+                            dcc.Markdown('Maak een keuze in de dropdown (gearchiveerde kaarten kunnen niet worden gekozen)'),
+                            dcc.Markdown('Klik daarna op Export om een dump van deze kaarten te downloaden.'),
+                            dcc.Dropdown(
+                                id='dropdownexportstatus',
+                                options=graphdata['optionsstatusesurenpermaand'],
+                                multi=True,
+                                searchable=False,
+                                value = ["Not Started", "Blocked", "Doing", "Done"]
+                            ),
+                            dash_table.DataTable(
+                            id='exportcardsperstatus',
+                            columns = [{'name': 'Kaart', 'id': 'Kaart','hideable': True},
+                                       {'name': 'Begindatum','id':'Begindatum','hideable': True},
+                                       {'name': 'Einddatum','id':'Einddatum','hideable': True},
+                                       {'name': 'Epic','id':'Epic','hideable': True},
+                                       {'name': 'URL', 'id': 'URL','hideable': True},
+                                       {'name': 'Categorie', 'id': 'Categorie', 'hideable': True},
+                                       {'name': 'Hoofdverantwoordelijke', 'id': 'Hoofdverantwoordelijke', 'hideable': True},
+                                       {'name': 'Cognosrapport', 'id': 'Cognosrapport', 'hideable': True},
+                                       {'name': 'Geplande uren', 'id': 'Geplande uren', 'hideable': True},
+                                       {'name': 'Status', 'id': 'Status', 'hideable': True},
+                                       {'name': 'Lijst', 'id': 'Lijst', 'hideable': True},
+                                       {'name': 'Gearchiveerd', 'id': 'Gearchiveerd', 'hideable': True}
+                                      ],
+                            hidden_columns=['Kaart', 'Begindatum', 'Einddatum', 'Epic', 'URL', 'Categorie', 'Hoofdverantwoordelijke', 'Cognosrapport', 'Geplande uren','Status','Lijst','Gearchiveerd'],
+                            export_format='xlsx',
+                            export_headers='display',
+                            export_columns='all',
+                            style_header={'backgroundColor': 'rgb(30, 30, 30)'},
+                            style_cell = {'backgroundColor': 'grey', 'color': 'white','text-align': 'left'}
+                            ),
+                        ],
+                        style={
+                            'background-color': 'rgba(62,182,235,0.1)', 
+                            'margin-top': '5%', 
+                            'margin-bottom': '5%', 
+                            'margin-left': '1%',
+                            'margin-right': '1%',
+                            'text-align': 'center',
+                            'border-radius': '10px'                   
+                            }
+                        
                         ),
-                
+                            
+                    ],
+                    style={                        
+                        'box-shadow': '8px 8px 8px grey',
+                        'background-image': """url('./assets/left.png')""",
+                        'background-repeat': 'no-repeat',
+                        'background-position': '0px 0px',
+                        'margin-top': '5%', 
+                        'margin-bottom': '5%', 
+                        'margin-left': '1%',
+                        'margin-right': '1%',
+                        'text-align': 'center',
+                        'border-radius': '10px'                   
+                        } 
+                    ),                
                 
                     ],
                 
@@ -705,6 +789,14 @@ app.layout = make_layout
 
 executor = ThreadPoolExecutor(max_workers=1)
 executor.submit(get_new_data_every)
+
+
+@app.callback(Output('exportcardsperstatus','data'),
+    [Input('dropdownexportstatus','value')])
+def exportstatus(somevalue):
+    return [item for item in graphdata['doingdatatable'] if item['Status'] in somevalue]
+
+
 
 @app.callback(Output('my-button','children'), [Input('my-button', 'n_clicks')])
 def on_click(n_clicks):
