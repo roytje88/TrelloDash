@@ -114,7 +114,8 @@ def create_graphdata():
                               'Lijst': j['list'],
                               'Gearchiveerd': j['closed']
                              })
-
+    
+    graphdata['emptygraph'] = {'data': [go.Pie()],'layout': go.Layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')}
     graphdata['doingdatatable'] = doingdatatable
     graphdata['listgraph'] = {'traces': tracesforlistsgraph, 'layout': layoutforlistsgraph}
     graphdata['nietingepland']= {'data': barsfornietingepland, 'layout': layoutforstackedbars}
@@ -751,60 +752,63 @@ def update_fig(input_value):
     [Input('dropdownepicsforgantt','value')])
 
 def update_gantt(someinput):
-
-    ganttdata= []
-    for i,j in data['kaarten'].items():
-        if j['epic'] in someinput:
-            if j['status'] in data['statuses']:
-                try:
-                    ganttdata.append(dict(Task=j['name'], Start=j['Begindatum'][6:16], Finish=j['Einddatum'][6:16], Resource=j['status']))
-                except:
-                    pass
-    title = 'Epic: '
-    
-    for i in someinput: 
-        if i != someinput[-1]:
-            title += i + ', '
-        else:
-            title += i
-            
-    fig = ff.create_gantt(ganttdata, index_col='Resource', show_colorbar=True, showgrid_x=True, 
-        showgrid_y=True,
-        title=title)
-    fig['layout'].update(paper_bgcolor='rgba(0,0,0,0)', 
-                        plot_bgcolor='rgba(0,0,0,0)',)
-    return fig
+    if someinput != []:
+        ganttdata= []
+        for i,j in data['kaarten'].items():
+            if j['epic'] in someinput:
+                if j['status'] in data['statuses']:
+                    try:
+                        ganttdata.append(dict(Task=j['name'], Start=j['Begindatum'][6:16], Finish=j['Einddatum'][6:16], Resource=j['status']))
+                    except:
+                        pass
+        title = 'Epic: '
+        
+        for i in someinput: 
+            if i != someinput[-1]:
+                title += i + ', '
+            else:
+                title += i
+        fig = ff.create_gantt(ganttdata, index_col='Resource', show_colorbar=True, showgrid_x=True, 
+            showgrid_y=True,
+            title=title)
+        fig['layout'].update(paper_bgcolor='rgba(0,0,0,0)', 
+                            plot_bgcolor='rgba(0,0,0,0)',)
+        return fig
+    else:
+        return graphdata['emptygraph']
 
 
 @app.callback(Output('gantttotal','figure'),
     [Input('dropdownepicsforgantttotal','value')])
 
 def update_gantt_total(someinput):
-
-    ganttdata= []
-    total_hours=0
-    for i,j in data['allepics'].items():
-        if j['name'] in someinput:
-            try:
-                total_hours += j['Geplande uren']
-            except:
-                pass 
-    
-    for i,j in data['allepics'].items():
-        if j['name'] in someinput:
+    if someinput != []:
+        ganttdata= []
+        total_hours=0
+        for i,j in data['allepics'].items():
+            if j['name'] in someinput:
                 try:
-                    ganttdata.append(dict(Task=j['name'], Start=j['Begindatum'][6:16], Finish=j['Einddatum'][6:16], Resource=j['Categorie'] ))
+                    total_hours += j['Geplande uren']
                 except:
-                    pass
-    title = 'Totaalniveau'
-
-            
-    fig = ff.create_gantt(ganttdata, showgrid_x=True, index_col='Resource', show_colorbar=True,
-        showgrid_y=True,
-        title=title)
-    fig['layout'].update(paper_bgcolor='rgba(0,0,0,0)', 
-                        plot_bgcolor='rgba(0,0,0,0)',)
-    return fig
+                    pass 
+        
+        for i,j in data['allepics'].items():
+            if j['name'] in someinput:
+                    try:
+                        ganttdata.append(dict(Task=j['name'], Start=j['Begindatum'][6:16], Finish=j['Einddatum'][6:16], Resource=j['Categorie'] ))
+                    except:
+                        pass
+        title = 'Totaalniveau'
+    
+                
+        fig = ff.create_gantt(ganttdata, showgrid_x=True, index_col='Resource', show_colorbar=True,
+            showgrid_y=True,
+            title=title)
+        fig['layout'].update(paper_bgcolor='rgba(0,0,0,0)', 
+                            plot_bgcolor='rgba(0,0,0,0)',)
+        return fig
+    else:
+        return graphdata['emptygraph']
 
         
 @app.callback(Output('epicstimeline','figure'),

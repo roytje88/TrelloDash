@@ -10,6 +10,7 @@ import pandas as pd
 from datetime import date,datetime,timedelta
 import copy
 
+
 configurationfile = './configuration/configuration.txt'
 credentialsfile = './configuration/credentials.txt'
 
@@ -432,7 +433,7 @@ for i,j in kaarten.items():
         
 epicdates = {}
 for i,j in epics.items():
-    epicdates[i] = {'Starts': [], 'Ends': [],'hours': 0}
+    epicdates[i] = {'Starts': [], 'Ends': [], 'hours': 0}
     for k,l in kaarten.items():
         if i == l['epicid']:
             if l[config.get('Custom Field for Starting date')] != None:
@@ -443,7 +444,6 @@ for i,j in epics.items():
                 epicdates[i]['hours'] += int(l['Geplande uren'])
             except:
                 pass
-            
     if epicdates[i]['Starts'] != []:
         epicdates[i]['Starts'] = min(epicdates[i]['Starts'])
     else:
@@ -451,8 +451,7 @@ for i,j in epics.items():
     if epicdates[i]['Ends'] != []:
         epicdates[i]['Ends'] = max (epicdates[i]['Ends'])
     else:
-        epicdates[i]['Ends'] = None
-        
+        epicdates[i]['Ends'] = None        
 for i,j in epics.items():
     for k,l in epicdates.items():
         if i == k:
@@ -461,6 +460,9 @@ for i,j in epics.items():
             j['Geplande uren'] = l['hours']
 
 jsonforallepics = copy.deepcopy(epics)
+
+
+ 
 
 
 # In[ ]:
@@ -942,10 +944,8 @@ for i,j in jsonforallepics.items():
         if type(l) == datetime:
             jsonallepics[i][k] = 'date, ' + l.strftime("%Y-%m-%d, %H:%M:%S")
         else:
-            jsonallepics[i][k] = l    
-
-
-
+            jsonallepics[i][k] = l   
+            
 def dumpjson(file, data):
     with open('./data/'+file, 'w') as outfile:
         json.dump(data, outfile, sort_keys=True) 
@@ -962,7 +962,6 @@ dumpjson('allcards.json',jsonallcards)
 dumpjson('statuses.json',jsonstatuses)
 dumpjson('meta.json',jsonmeta)
 dumpjson('allepics.json',jsonallepics)
-
 
 
 string = datetime.now().strftime("%Y-%m-%d, %H:%M:%S")
