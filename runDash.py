@@ -93,13 +93,13 @@ def create_graphdata():
     doingdatatable = []
     for i,j in data['kaarten'].items():
             try:
-                start = j['Begindatum'][6:16]
+                start = datetime.strptime(j['Begindatum'][6:16], '%Y-%m-%d').date()
             except:
-                start = j['Begindatum']
+                start = None
             try:
-                stop = j['Einddatum'][6:16]
+                stop = datetime.strptime(j['Einddatum'][6:16], '%Y-%m-%d').date()
             except:
-                stop = j['Einddatum']
+                stop = None
             
             doingdatatable.append({'Kaart': j['name'],
                               'Begindatum': start,
@@ -633,6 +633,7 @@ def make_layout():
                     html.Div([
                         html.Div([
                             html.H4('Alle kaarten'),
+                            dcc.Markdown('Gebruik de knop \'Toggle Columns\' om velden zichtbaar te maken. Vervolgens kun je sorteren en filteren in de tabel.'),
                             dcc.Markdown('Klik op Export om een dump van alle kaarten te downloaden.'),
                             dash_table.DataTable(
                             id='exportallcards',
@@ -651,6 +652,9 @@ def make_layout():
                                       ],
                             hidden_columns=['Kaart', 'Begindatum', 'Einddatum', 'Epic', 'URL', 'Categorie', 'Hoofdverantwoordelijke', 'Cognosrapport', 'Geplande uren','Status','Lijst','Gearchiveerd'],
                             export_format='xlsx',
+                            filter_action="native",
+                            sort_action="native",
+                            sort_mode="multi",                            
                             export_headers='display',
                             export_columns='all',
                             data= graphdata['doingdatatable'],
@@ -712,6 +716,9 @@ def make_layout():
                                        {'name': 'Gearchiveerd', 'id': 'Gearchiveerd', 'hideable': True}
                                       ],
                             hidden_columns=['Kaart', 'Begindatum', 'Einddatum', 'Epic', 'URL', 'Categorie', 'Hoofdverantwoordelijke', 'Cognosrapport', 'Geplande uren','Status','Lijst','Gearchiveerd'],
+                            filter_action="native",
+                            sort_action="native",
+                            sort_mode="multi",
                             export_format='xlsx',
                             export_headers='display',
                             export_columns='all',
@@ -987,7 +994,7 @@ def update_hourscat(whatever):
 
 
 if __name__ == '__main__':
-    app.run_server(debug=True,host='0.0.0.0', port=8050)
+    app.run_server(debug=True,host='0.0.0.0', port=8051)
 
 
 
