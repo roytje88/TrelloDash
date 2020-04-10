@@ -1,4 +1,4 @@
-import pandas as pd
+
 import os,json, locale
 import dash, dash_table, dash_auth
 import dash_core_components as dcc

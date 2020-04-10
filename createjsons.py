@@ -6,7 +6,6 @@
 
 
 import requests,json,os, pprint,requests
-import pandas as pd
 from datetime import date,datetime,timedelta
 import copy
 
