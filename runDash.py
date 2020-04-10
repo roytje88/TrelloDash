@@ -629,7 +629,7 @@ def make_layout():
                 
 
             
-                dcc.Tab(label='Exporteer data (in progress)',children=[
+                dcc.Tab(label='Tabelgegevens',children=[
                     html.Div([
                         html.Div([
                             html.H4('Alle kaarten'),
@@ -700,31 +700,44 @@ def make_layout():
                                 searchable=False,
                                 value = ["Not Started", "Blocked", "Doing", "Done"]
                             ),
-                            dash_table.DataTable(
-                            id='exportcardsperstatus',
-                            columns = [{'name': 'Kaart', 'id': 'Kaart','hideable': True},
-                                       {'name': 'Begindatum','id':'Begindatum','hideable': True},
-                                       {'name': 'Einddatum','id':'Einddatum','hideable': True},
-                                       {'name': 'Epic','id':'Epic','hideable': True},
-                                       {'name': 'URL', 'id': 'URL','hideable': True},
-                                       {'name': 'Categorie', 'id': 'Categorie', 'hideable': True},
-                                       {'name': 'Hoofdverantwoordelijke', 'id': 'Hoofdverantwoordelijke', 'hideable': True},
-                                       {'name': 'Cognosrapport', 'id': 'Cognosrapport', 'hideable': True},
-                                       {'name': 'Geplande uren', 'id': 'Geplande uren', 'hideable': True},
-                                       {'name': 'Status', 'id': 'Status', 'hideable': True},
-                                       {'name': 'Lijst', 'id': 'Lijst', 'hideable': True},
-                                       {'name': 'Gearchiveerd', 'id': 'Gearchiveerd', 'hideable': True}
-                                      ],
-                            hidden_columns=['Kaart', 'Begindatum', 'Einddatum', 'Epic', 'URL', 'Categorie', 'Hoofdverantwoordelijke', 'Cognosrapport', 'Geplande uren','Status','Lijst','Gearchiveerd'],
-                            filter_action="native",
-                            sort_action="native",
-                            sort_mode="multi",
-                            export_format='xlsx',
-                            export_headers='display',
-                            export_columns='all',
-                            style_header={'backgroundColor': 'rgb(30, 30, 30)'},
-                            style_cell = {'backgroundColor': 'grey', 'color': 'white','text-align': 'left'}
-                            ),
+                            html.Div([
+                                dash_table.DataTable(
+                                id='exportcardsperstatus',
+                                columns = [{'name': 'Kaart', 'id': 'Kaart','hideable': True},
+                                           {'name': 'Begindatum','id':'Begindatum','hideable': True},
+                                           {'name': 'Einddatum','id':'Einddatum','hideable': True},
+                                           {'name': 'Epic','id':'Epic','hideable': True},
+                                           {'name': 'URL', 'id': 'URL','hideable': True},
+                                           {'name': 'Categorie', 'id': 'Categorie', 'hideable': True},
+                                           {'name': 'Hoofdverantwoordelijke', 'id': 'Hoofdverantwoordelijke', 'hideable': True},
+                                           {'name': 'Cognosrapport', 'id': 'Cognosrapport', 'hideable': True},
+                                           {'name': 'Geplande uren', 'id': 'Geplande uren', 'hideable': True},
+                                           {'name': 'Status', 'id': 'Status', 'hideable': True},
+                                           {'name': 'Lijst', 'id': 'Lijst', 'hideable': True},
+                                           {'name': 'Gearchiveerd', 'id': 'Gearchiveerd', 'hideable': True}
+                                          ],
+                                hidden_columns=['Categorie', 'Cognosrapport', 'Lijst','Gearchiveerd'],
+                                filter_action="native",
+                                sort_action="native",
+                                sort_mode="multi",
+                                export_format='xlsx',
+                                export_headers='display',
+                                export_columns='all',
+                                style_header={'backgroundColor': 'rgba(62,182,235,0.6)','color': 'black', 'fontWeight': 'bold', 'fontFamily': 'Arial'},
+                                style_cell = {'backgroundColor': 'rgba(62,182,235,0.2)', 'color': 'black','text-align': 'left', 'fontFamily': 'Arial'}
+                                ),
+                            ],
+                            style={
+
+                                'margin-top': '5%', 
+                                'margin-bottom': '5%', 
+                                'margin-left': '1%',
+                                'margin-right': '1%',
+                                'text-align': 'center',
+                                'border-radius': '10px'                                     
+                                }
+                            
+                            )
                         ],
                         style={
                             'background-color': 'rgba(62,182,235,0.1)', 
@@ -801,6 +814,7 @@ executor.submit(get_new_data_every)
 @app.callback(Output('exportcardsperstatus','data'),
     [Input('dropdownexportstatus','value')])
 def exportstatus(somevalue):
+    refresh_data()
     return [item for item in graphdata['doingdatatable'] if item['Status'] in somevalue]
 
 
