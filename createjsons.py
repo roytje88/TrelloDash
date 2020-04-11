@@ -15,11 +15,11 @@ credentialsfile = './configuration/credentials.txt'
 
 def createfolders():
     try:
-        temp = os.stat('./configuration')
+        os.stat('./configuration')
     except:
         os.mkdir('./configuration')
     try:
-        temp = os.stat('./data')
+        os.stat('./data')
     except:
         os.mkdir('./data')
 createfolders()
