@@ -13,6 +13,7 @@ from datetime import date,datetime,timedelta,time
 
 ## Read the credentials file to get user/pass
 try:
+
     with open('./configuration/credentials.txt') as json_file:
         creds = json.load(json_file)
 except:
@@ -29,8 +30,15 @@ locale = locale.setlocale(locale.LC_ALL, 'nl_NL.UTF-8')
 
 ## Function to read the data in ./data folder
 def refresh_data():
-    with open('./data/date.txt', 'r') as f2:
-        dateofdata = f2.read()
+    try:
+        with open('./data/date.txt', 'r') as f2:
+             dateofdata = f2.read()
+    except:
+        import createjsons
+        with open('./data/date.txt', 'r') as f2:
+             dateofdata = f2.read()
+
+
 
     daterefreshed = 'Refreshen. Laatste refresh: ' + datetime.strftime(datetime.strptime(dateofdata,'%Y-%m-%d, %H:%M:%S'),'%A %-d %B, %H:%M')
     if datetime.strptime(dateofdata,'%Y-%m-%d, %H:%M:%S') < datetime.now() - timedelta(hours=1):
