@@ -1,5 +1,5 @@
 [Unit]
-Description=Python Dashboard voor USD
+Description=Python Dashboard for Trello
 After=network.target
 StartLimitInterval=200
 StartLimitBurst=5
@@ -8,8 +8,8 @@ StartLimitBurst=5
 Type=fork
 Restart=always
 RestartSec=5
-User=roy
-ExecStart=/media/4tb/python/scripts/dash.sh
+User=trellodash
+ExecStart=/usr/bin/trellodash
 
 [Install]
 WantedBy=multi-user.target

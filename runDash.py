@@ -12,8 +12,14 @@ import dash_bootstrap_components as dbc
 from datetime import date,datetime,timedelta,time
 
 ## Read the credentials file to get user/pass
-with open('./configuration/credentials.txt') as json_file:
-    creds = json.load(json_file)
+try:
+    with open('./configuration/credentials.txt') as json_file:
+        creds = json.load(json_file)
+except:
+    import createjsons
+    with open('./configuration/credentials.txt') as json_file:
+        creds = json.load(json_file)
+
 
 ## Set user/pass
 USERNAMES = {creds.get('Username for Dash'): creds.get('Password for Dash')}
