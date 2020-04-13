@@ -1,5 +1,5 @@
 
-import os,json, locale
+import os,json, locale, requests
 import dash, dash_table, dash_auth
 import dash_core_components as dcc
 import dash_html_components as html
@@ -11,7 +11,6 @@ from dash.dependencies import Input, Output
 import dash_bootstrap_components as dbc
 from datetime import date,datetime,timedelta,time
 
-## Read the credentials file to get user/pass
 try:
 
     with open('./configuration/credentials.txt') as json_file:
@@ -21,42 +20,20 @@ except:
     with open('./configuration/credentials.txt') as json_file:
         creds = json.load(json_file)
 
-
-## Set user/pass
 USERNAMES = {creds.get('Username for Dash'): creds.get('Password for Dash')}
 
-## Set locale Dutch
 locale = locale.setlocale(locale.LC_ALL, 'nl_NL.UTF-8')
 
-## Function to read the data in ./data folder
+
+ 
+
 def refresh_data():
-    try:
-        with open('./data/date.txt', 'r') as f2:
-             dateofdata = f2.read()
-    except:
-        import createjsons
-        with open('./data/date.txt', 'r') as f2:
-             dateofdata = f2.read()
-
-
-
-    daterefreshed = 'Refreshen. Laatste refresh: ' + datetime.strftime(datetime.strptime(dateofdata,'%Y-%m-%d, %H:%M:%S'),'%A %-d %B, %H:%M')
-    if datetime.strptime(dateofdata,'%Y-%m-%d, %H:%M:%S') < datetime.now() - timedelta(hours=1):
-        import createjsons
     global data
-    data = {}
-    def loadjson(file):
-        with open('./data/'+file) as json_file:
-            return json.load(json_file)
-    for i in listdir('./data'):
-        if i[-5:]== '.json':
-            name = i[:-5]
-            values = loadjson(i)
-            data[name] = values
-    data['refreshed'] = {'daterefreshed': daterefreshed, 'dateofdata': dateofdata}
+    from getdata import jsonallcards, jsonallepics, jsonimportantcards,jsoncategories, alldates, jsonepics, jsoncards, jsonmeta, jsonnietingepland, jsonstatuses, jsonuren
+    data = {'allcards': jsonallcards, 'allepics': jsonallepics, 'belangrijkekaarten': jsonimportantcards, 'categories': jsoncategories, 'dates': alldates, 'epics': jsonepics, 'kaarten': jsoncards, 'meta': jsonmeta, 'nietingepland': jsonnietingepland, 'statuses': jsonstatuses, 'uren': jsonuren}
+    data['refreshed'] = {'daterefreshed': datetime.strftime(datetime.now(),'%A %-d %B, %H:%M'), 'dateofdata': datetime.now()}
     create_graphdata()
 
-## Create one function to create all data that is not updated using a function/callback (this data is generated one time)
 def create_graphdata():
     global graphdata
     graphdata = {}
@@ -76,20 +53,6 @@ def create_graphdata():
             pass 
     graphdata['meta']['firstdateplanned'] = min(planneddates['startingdates']).date()
     graphdata['meta']['lastdateplanned'] = max(planneddates['endingdates']).date()
-    layoutforlistsgraph = go.Layout(paper_bgcolor='rgba(0,0,0,0)', 
-                                    plot_bgcolor='rgba(0,0,0,0)',
-                                    autosize=True,
-                                    xaxis_range=[graphdata['meta']['eerstedatum'],graphdata['meta']['huidigedatum']],
-                                    xaxis={'title': 'Datum', 'gridcolor': 'gray'},
-                                    yaxis={'title': 'Aantal kaarten', 'gridcolor': 'gray'})
-    tracesforlistsgraph = []
-    for i,j in data['lists'].items():
-        tracesforlistsgraph.append(dict(x=data['dates']['history']['datum'],
-                                        y=j['Datum'],
-                                        name=i,
-                                        mode='lines',
-                                        line = {'shape': 'spline', 'smoothing': 0.5},
-                                        stackgroup='one'))
 
     layoutforstackedbars = go.Layout(barmode='stack', paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
     barsfornietingepland = []
@@ -131,11 +94,10 @@ def create_graphdata():
     
     graphdata['emptygraph'] = {'data': [go.Pie()],'layout': go.Layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')}
     graphdata['doingdatatable'] = doingdatatable
-    graphdata['listgraph'] = {'traces': tracesforlistsgraph, 'layout': layoutforlistsgraph}
     graphdata['nietingepland']= {'data': barsfornietingepland, 'layout': layoutforstackedbars}
     graphdata['optionsstatusesurenpermaand'] = optionsstatusesurenpermaand
-                                          
     
+
 refresh_data()
 
 ## Set update interval to refresh data of the dashboard and create a function to update every x seconds
@@ -499,51 +461,7 @@ def make_layout():
                     }
             ),#/tab epics
             
-            dcc.Tab(label='Trellogebruik', children=[
-                html.Div([                    
-                    html.Div([                        
-                        html.H3('Aantal kaarten per lijst'),
-                        dcc.Markdown('''**Uitleg**'''),
-                        dcc.Markdown('''Deze grafiek geeft aan hoeveel kaarten er per lijst wanneer op Trello stonden. Rechts staan de lijsten uit Trello. Door op deze lijsten te klikken, kunnen ze aan of uit gezet worden.'''),
-                        dcc.Markdown('''**Let op: ** Dit is een weergave van **alle** lijsten! Ook de kaarten die klaar zijn!'''),
-                        dcc.Graph(id='graph_lists',figure={'data': graphdata['listgraph']['traces'],
-                                                    'layout': graphdata['listgraph']['layout']})                        
-                        ],
-                        style={
-                            'background-color': 'rgba(62,182,235,0.1)', 
-                            'margin-top': '1%', 
-                            'margin-bottom': '1%', 
-                            'margin-left': '1%',
-                            'margin-right': '1%',
-                            'text-align': 'center',
-                            'border-radius': '10px'                   
-                            }                                
-                        )
-                    
-                    ],
-                    style={'box-shadow': '8px 8px 8px grey',
-                        'background-image': """url('./assets/left.png')""",
-                        'background-repeat': 'no-repeat',
-                        'background-position': '0px 0px',
-                        'margin-top': '1%', 
-                        'margin-bottom': '1%', 
-                        'margin-right': '1%', 
-                        'margin-left': '1%',
-                        'border-radius': '10px'
-                        }
-                    ),
-                ],
-                style={'border-style': 'solid',
-                    'border-width': '2px',
-                    'background': 'rgb(255,255,255)',
-                    'background': 'radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(162,162,162,1) 100%, rgba(255,255,255,1) 100%)',
-                    'margin-top': '5px', 
-                    'margin-bottom': '5px', 
-                    'margin-right': '5px', 
-                    'margin-left': '5px',
-                    'border-radius': '6px'
-                    }
-            ),#/tab trellogebruik
+
 
             dcc.Tab(label='Urenverdeling',children=[
                 html.Div([                   
@@ -836,8 +754,7 @@ def exportstatus(somevalue):
 @app.callback(Output('my-button','children'), [Input('my-button', 'n_clicks')])
 def on_click(n_clicks):
     if n_clicks != None:
-        import createjsons
-    refresh_data()
+        refresh_data()
 
     return data['refreshed']['daterefreshed']
 
@@ -1023,6 +940,8 @@ def update_hourscat(whatever):
 
 if __name__ == '__main__':
     app.run_server(debug=True,host='0.0.0.0', port=8051)
+
+
 
 
 
