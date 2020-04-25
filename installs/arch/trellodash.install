@@ -1,0 +1,15 @@
+post_install() {
+
+    systemd-sysusers trellodash.conf
+    
+    python -m venv /var/lib/trellodash/venv --system-site-packages
+    source /var/lib/trellodash/venv/bin/activate
+    pip install -r /var/lib/trellodash/requirements.txt --ignore-installed
+    chown -R trellodash: /var/lib/trellodash
+}
+
+post_upgrade() {
+    source /var/lib/trellodash/venv/bin/activate
+    pip install -r /var/lib/trellodash/requirements.txt --ignore-installed --upgrade
+    chown -R trellodash: /var/lib/trellodash
+}

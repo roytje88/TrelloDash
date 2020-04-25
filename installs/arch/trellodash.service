@@ -1,0 +1,15 @@
+[Unit]
+Description=Python Dashboard for Trello
+After=network.target
+StartLimitInterval=200
+StartLimitBurst=5
+
+[Service]
+Type=fork
+Restart=always
+RestartSec=5
+User=trellodash
+ExecStart=/usr/bin/trellodash
+
+[Install]
+WantedBy=multi-user.target

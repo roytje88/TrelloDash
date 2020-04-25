@@ -132,6 +132,7 @@ dmypy.json
 
 data/
 configuration/
+conf/
 
 ## A notebook for testing purposes
 
@@ -144,3 +145,4 @@ test.py
 
 ## Folder for testing purposes
 test/
+poging snelle berekeningen.ipynb
