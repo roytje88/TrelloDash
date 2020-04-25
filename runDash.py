@@ -12,9 +12,9 @@ from datetime import date,datetime,timedelta,time
 
 #--! Check if app is deployed
 try:
-    with open('./configuration/credentials.json') as json_file:
+    with open('./configuration/credentials.txt') as json_file:
         credentials = json.load(json_file)
-    with open('./configuration/configuration.json') as json_file:
+    with open('./configuration/configuration.txt') as json_file:
         config = json.load(json_file)
 except:
     raise Exception('Draai eerst deploy.py!')
