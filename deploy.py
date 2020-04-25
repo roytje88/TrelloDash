@@ -48,27 +48,54 @@ def new_fill(file, template):
     except:
         os.mkdir('./configuration')
     # update all valuea in template
+
+# definitionf for answers per type
+## str
+## list
+## dict
+## bool
+def check_input(predicate, msg, error_string="Illegal Input"):
+    while True:
+        result = input(msg).strip()
+        if predicate(result):
+            return result
+        print(error_string)
+
+result = check_input(lambda x: x in [True, False],
+                                   'Are you male or female? ')
+print(result)
+
+#In[]:
     for i in template:
-        # itetate through entries, checking for type and adjusting entry methode
+        # itertate through entries, checking for type and adjusting entry methode
         if isinstance(template[i],str):
-            if i == "__Comment":
-                print('skipping Comment')
-                pass
-            else:
-                template[i] = input("Add value for "+i)
-                print("VALUE ADDED FOR "+i+": "+template[i])
+            print('str done') # remove after debug
+            # if i == '__Comment' or i == 'Version':
+            #     print('skipping '+i)
+            # else:
+            #     template[i] = input("Add value for "+i)
+            #     print("VALUE ADDED FOR "+i+": "+template[i])
         elif isinstance(template[i],list):
-            print('List: multiple answers possible. End with "x"')
-            listitem = ""
-            while listitem != "x":
-                listitem = input('Add listitem for '+i+'. (end with "x")')
-                template[i].append(listitem)
-            template[i].remove("x")
-            print("LIST ADDED FOR "+str(i)+": "+str(template[i]))
+            print('list done') # remove after debug
+            # print('List: multiple answers possible. End with "x"')
+            # listitem = ""
+            # while listitem != "x":
+            #     listitem = input('Add listitem for '+i+'. (end with "x")')
+            #     template[i].append(listitem)
+            # template[i].remove("x")
+            # print("LIST ADDED FOR "+str(i)+": "+str(template[i]))
         elif isinstance(template[i],dict):
-            for k,v in template[i]:
-                print(k+":"+v)
+            for k,v in template[i].items():
+                if isinstance(v,bool):
+                    repeat = True
+                    while repeat == True:
+                        v = input('ADD VALUE FOR "'+k+'"? (True/False)')
+                        if v != True or v != False:
+
+
+
                 #To DO itterate over dictionary for answers
+#In[]:
     # write values to file
     with open(file, 'w') as outfile:
         json.dump(template, outfile, indent=4, sort_keys=True)
@@ -90,3 +117,6 @@ def load(file):
 load(configurationfile)
 load(credentialsfile)
 # done
+
+
+# %%
