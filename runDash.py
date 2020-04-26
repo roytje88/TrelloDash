@@ -1,4 +1,4 @@
-import os, json, locale, requests, dash, dash_table, dash_auth, copy, time
+import os, json, locale, requests, dash, dash_table, copy, time
 import dash_core_components as dcc
 import dash_html_components as html
 import plotly.graph_objects as go
@@ -7,7 +7,6 @@ from os import listdir
 import plotly.figure_factory as ff
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
 from dash.dependencies import Input, Output
-import dash_bootstrap_components as dbc
 from datetime import date,datetime,timedelta,time
 
 #--! Check if app is deployed
