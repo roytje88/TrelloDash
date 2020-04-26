@@ -1,4 +1,4 @@
 #!/bin/bash
-cd /var/lib/trellodash/
-source env/bin/activate
-python runDash.py 
+cd /var/lib/trellodash
+
+python /var/lib/trellodash/runDash.py 

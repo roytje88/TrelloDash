@@ -9,7 +9,7 @@ Type=fork
 Restart=always
 RestartSec=5
 User=trellodash
-ExecStart=/usr/bin/trellodash
+ExecStart=/usr/bin/trellodash 
 
 [Install]
 WantedBy=multi-user.target

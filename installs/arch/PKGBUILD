@@ -1,33 +1,28 @@
 # Maintainer: test <test@test.com>
 
 pkgname='trellodash'
-pkgver="0.1.3"
+pkgver="1.0"
 pkgrel=0
 pkgdesc="Install a dashboard using Dash (Python) for Trello"
 arch=(any)
 url="https://github.com/roytje88/TrelloDash"
 license=('GPL')
-depends=('python-virtualenv' 'python-numpy')
+depends=('python-virtualenv' 'python-numpy' 'python-pandas' 'python-dash' 'python-dash-table')
 install=trellodash.install
-source=("https://github.com/roytje88/TrelloDash/archive/0.1.3.tar.gz"
+source=("https://github.com/roytje88/TrelloDash/archive/master.zip"
         "trellodash.service"
         "trellodash.sh"
         "trellodash.sysusers")
-sha512sums=('6022ac5e6f78474f03ac18e07ba3929309eac16143efed113ad508dc02e74ab9dd5ec5fc9496cc6bacbdf0a99a0cda5876856f7e7e90b171d9c7677ab7446abc'
-            '07e383f6b7ebea33ffbbf5048ea1d87e415017649d73845dce85ef8ba7d25e8403558c59a320180a6880455bf1dd9e7e28bc4d10228d1389eee9269bfd7823e7'
-            'b28b0b57f86e72c999f8b97e779abe07853a2f49e6bc4d21e274bd61ea715882c795ab21119d7b57edb682fa6fc39a4714717f214dcdbef56094f9e7d694d93c'
+sha512sums=('091052e6d0bd73ff1fee80743e57472f6c18235f6fc4a4b57d2fa7c6f38246e3f1a1f39b00c2a2fcfe81f8d5677de602df98550bcce2ed1788edc64b2ae503d7'
+            'b00f74ae6447cb5f62cb4b3d8df8b9ca5b349e98b7f3704a3f575663aedbaba66e02100425fae13c4ced75d311db361cbabca1a89d429d287478792e58750ff7'
+            '5cea6c7724d3a27a4992c3c0fc9c08b638217dcd09f3fdf26b5bfbba125d446f80a9543832b398527d414a5a79b91b70f81a7af0c4bb6a58008832780a2fe0c4'
             'baa509f87b2612a413bf7b70aa15bb4b0ef58297d01e0b25ca45544f175d9d1d3f020028b46c48f3a07e71383ae1cb697fc16cb7fe0b94fe990cb8f0b2b7e0d9')
 
-##TODO
-# create sh file for /usr/bin
-# pip ignore --system-site-packages
-# echo 'enable systemd service'
-# replace all hardcoded folders to version-variables
-
 package() {
+
     cd $srcdir
     install -d -m 755 "${pkgdir}/var/lib/trellodash"
-    cp -dpr "$srcdir/TrelloDash-$pkgver/"* $pkgdir/var/lib/trellodash/
+    cp -dpr "$srcdir/TrelloDash-master/"* $pkgdir/var/lib/trellodash/
     install -D -m 755 "${srcdir}/trellodash.sh" "${pkgdir}/usr/bin/trellodash"
     install -D -m 644 "${srcdir}/trellodash.service" "${pkgdir}/usr/lib/systemd/system/trellodash.service"
     install -Dm644 "${srcdir}/trellodash.sysusers" "${pkgdir}/usr/lib/sysusers.d/trellodash.conf"
