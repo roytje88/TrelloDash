@@ -9,7 +9,62 @@ import os,json,shutil
 ### set files locations
 configurationfile = './configuration/configuration.txt'
 credentialsfile = './configuration/credentials.txt'
+
 ### define funcions for loading and updating files
+
+# To Do: definition for answers per type
+## str
+def question_str(i):
+    answer = input('Add value for '+i+': ')
+    return answer
+## list
+def question_list(i):
+    print('List: multiple answers possible. End with "x"')
+    answer = []
+    listitem = ""
+    while listitem != "x":
+        listitem = input('Add listitem for '+i+' (end with "x"): ')
+        answer.append(listitem)
+    answer.remove("x")
+    return answer
+## bool
+def question_bool(k):
+        while True:
+            answer = input('ADD VALUE FOR "'+k+'"? (True/False)')
+            if answer == 'True':
+                v = bool(answer)
+                break
+            elif answer == 'False':
+                v = bool()
+                break
+            else:
+                print("Value is not boolean. Try again.")
+                continue
+        return v
+## dict
+def question_dict():
+        elif isinstance(template[i],dict):
+            for k,v in template[i].items():
+                question_list()
+                question_str()
+                question_bool()
+
+def question_per_type(i,t):
+    if t == str:
+        answer = question_str(i)
+        print('ADDING VALUE FOR '+i+': '+answer)
+        return answer
+    elif t ==list:
+        answer = question_list(i)
+        print("ADDIND LIST FOR "+i+": "+answer)
+        return answer
+    elif isinstance(template[i],dict):
+    ## FROM HERE
+            for k,v in template[i].items():
+                if isinstance(v,bool):
+                    template[i] = question_bool(i)
+                    print('VALUE ADDED FOR '+k+' in '+str(i)+': '+str(template[i][k]))
+
 
 def load_update(file, template):
     # load file
@@ -21,13 +76,14 @@ def load_update(file, template):
     elif c.keys() == template.keys():
         print('No difference in keys. Only updating version value')
     else:
-        #add new entries
+        # add new entries
         for i in template.keys():
             if c.get(i) == None:
-                new = {i:input("Add value for "+i+" as "+str(type(template.get(i))))}
+                # To Do: add chek for type
+                new = {i:input("Add value for "+i+": ")}
                 c.update(new)
                 print("Added: "+str(new))
-        #remove removed entries
+        # remove removed entries
         remove = []
         for i in c.keys():
             if template.get(i) == None:
@@ -42,12 +98,6 @@ def load_update(file, template):
     with open(file, 'w') as outfile:
         json.dump(c, outfile, indent=4, sort_keys=True)
 
-# To Do: definition for answers per type
-## str
-## list
-## dict
-## bool
-
 def new_fill(file, template):
     #check if folder exists, else create it
     try:
@@ -57,38 +107,10 @@ def new_fill(file, template):
     # update all valuea in template
     for i in template:
         # itertate through entries, checking for type and adjusting entry methode
-        if isinstance(template[i],str):
-            print('str done') # remove after debug
-            if i == '__Comment' or i == 'Version':
-                print('skipping '+i)
-            else:
-                template[i] = input("Add value for "+i)
-                print("VALUE ADDED FOR "+i+": "+template[i])
-        elif isinstance(template[i],list):
-            print('list done') # remove after debug
-            print('List: multiple answers possible. End with "x"')
-            listitem = ""
-            while listitem != "x":
-                listitem = input('Add listitem for '+i+'. (end with "x")')
-                template[i].append(listitem)
-            template[i].remove("x")
-            print("LIST ADDED FOR "+str(i)+": "+str(template[i]))
-        elif isinstance(template[i],dict):
-            for k,v in template[i].items():
-                if isinstance(v,bool):
-                    while True:
-                        v = input('ADD VALUE FOR "'+k+'"? (True/False)')
-                        if v == 'True':
-                            template[i][k] = bool(v)
-                            break
-                        elif v == 'False':
-                            template[i][k] = bool()
-                            break
-                        else:
-                            print("Value is not boolean. Try again.")
-                            continue
-                    print('VALUE ADDED FOR '+k+' in '+str(i)+': '+str(template[i][k]))
-#In[]:
+        if i == '__Comment' or i == 'Version':
+            print('skipping '+i)
+        else:
+            template[i] = question_per_type(i,type(template[i]))
     # write values to file
     with open(file, 'w') as outfile:
         json.dump(template, outfile, indent=4, sort_keys=True)
