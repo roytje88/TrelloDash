@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
+#In[]
 import os,json,shutil
 
 # start setup
@@ -41,6 +42,12 @@ def load_update(file, template):
     with open(file, 'w') as outfile:
         json.dump(c, outfile, indent=4, sort_keys=True)
 
+# To Do: definition for answers per type
+## str
+## list
+## dict
+## bool
+
 def new_fill(file, template):
     #check if folder exists, else create it
     try:
@@ -48,53 +55,39 @@ def new_fill(file, template):
     except:
         os.mkdir('./configuration')
     # update all valuea in template
-
-# definitionf for answers per type
-## str
-## list
-## dict
-## bool
-def check_input(predicate, msg, error_string="Illegal Input"):
-    while True:
-        result = input(msg).strip()
-        if predicate(result):
-            return result
-        print(error_string)
-
-result = check_input(lambda x: x in [True, False],
-                                   'Are you male or female? ')
-print(result)
-
-#In[]:
     for i in template:
         # itertate through entries, checking for type and adjusting entry methode
         if isinstance(template[i],str):
             print('str done') # remove after debug
-            # if i == '__Comment' or i == 'Version':
-            #     print('skipping '+i)
-            # else:
-            #     template[i] = input("Add value for "+i)
-            #     print("VALUE ADDED FOR "+i+": "+template[i])
+            if i == '__Comment' or i == 'Version':
+                print('skipping '+i)
+            else:
+                template[i] = input("Add value for "+i)
+                print("VALUE ADDED FOR "+i+": "+template[i])
         elif isinstance(template[i],list):
             print('list done') # remove after debug
-            # print('List: multiple answers possible. End with "x"')
-            # listitem = ""
-            # while listitem != "x":
-            #     listitem = input('Add listitem for '+i+'. (end with "x")')
-            #     template[i].append(listitem)
-            # template[i].remove("x")
-            # print("LIST ADDED FOR "+str(i)+": "+str(template[i]))
+            print('List: multiple answers possible. End with "x"')
+            listitem = ""
+            while listitem != "x":
+                listitem = input('Add listitem for '+i+'. (end with "x")')
+                template[i].append(listitem)
+            template[i].remove("x")
+            print("LIST ADDED FOR "+str(i)+": "+str(template[i]))
         elif isinstance(template[i],dict):
             for k,v in template[i].items():
                 if isinstance(v,bool):
-                    repeat = True
-                    while repeat == True:
+                    while True:
                         v = input('ADD VALUE FOR "'+k+'"? (True/False)')
-                        if v != True or v != False:
-
-
-
-                #To DO itterate over dictionary for answers
+                        if v == 'True':
+                            template[i][k] = bool(v)
+                            break
+                        elif v == 'False':
+                            template[i][k] = bool()
+                            break
+                        else:
+                            print("Value is not boolean. Try again.")
+                            continue
+                    print('VALUE ADDED FOR '+k+' in '+str(i)+': '+str(template[i][k]))
 #In[]:
     # write values to file
     with open(file, 'w') as outfile:
