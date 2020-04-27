@@ -394,39 +394,77 @@ def get_data():
     # create figure for gauge (planned vs available hours)
     if int(datetime.strftime(datetime.now(), '%d')) >15: 
         monthtoshow = datetime.strftime(datetime.now() + timedelta(days=20), '%Y%m')
+        nextmonthtoshow = datetime.strftime(datetime.now() + timedelta(days=50), '%Y%m')
     else:
         monthtoshow = datetime.strftime(datetime.now(), '%Y%m')
-    gaugegepland = round(sum([value for card in urenperdagperkaart.values() for keys,value in card['urenperperiode'].items() if keys==monthtoshow]))
-    delta = round(sum([value for card in beschikbareuren.values() for keys,value in card['urenperperiode'].items() if keys==monthtoshow]))
-    if delta > gaugegepland:
-        gaugerange = delta + 20
-    else:
-        gaugerange = gaugegepland + 20
-    gaugesteps = {'axis': {'range': [None, gaugerange]},
-                 'steps': [
-                     {'range': [0, delta*0.5], 'color': '#3deb34'},
-                     {'range': [delta*0.5, delta*0.75], 'color': '#b4eb34'},
-                     {'range': [delta*0.75, delta*0.9], 'color': '#ebb434'},
-                     {'range': [delta*0.9,gaugerange], 'color': '#eb3434'},
-                     ],
-                  'threshold': {'line': {'color': "#5c0000", 'width': 4}, 'thickness': 0.75, 'value': delta}
+        nextmonthtoshow = datetime.strftime(datetime.now() + timedelta(days=20), '%Y%m')
+    
+    gaugegeplandcurrmonth = round(sum([value for card in urenperdagperkaart.values() for keys,value in card['urenperperiode'].items() if keys==monthtoshow]))
+    gaugegeplandnextmonth = round(sum([value for card in urenperdagperkaart.values() for keys,value in card['urenperperiode'].items() if keys==nextmonthtoshow]))
 
+    deltacurrmonth = round(sum([value for card in beschikbareuren.values() for keys,value in card['urenperperiode'].items() if keys==monthtoshow]))
+    deltanextmonth = round(sum([value for card in beschikbareuren.values() for keys,value in card['urenperperiode'].items() if keys==nextmonthtoshow]))
+
+    if deltacurrmonth > gaugegeplandcurrmonth:
+        gaugerangecurrmonth = deltacurrmonth + 20
+    else:
+        gaugerangecurrmonth = gaugegeplandcurrmonth + 20
+
+    if deltanextmonth > gaugegeplandnextmonth:
+        gaugerangenextmonth = deltanextmonth + 20
+    else:
+        gaugerangenextmonth = gaugegeplandnextmonth + 20    
+
+    gaugestepscurrmonth = {'axis': {'range': [None, gaugerangecurrmonth]},
+                 'bar': {'color': '#0065fc'},
+                 'steps': [
+                     {'range': [0, deltacurrmonth*0.5], 'color': '#3deb34'},
+                     {'range': [deltacurrmonth*0.5, deltacurrmonth*0.75], 'color': '#b4eb34'},
+                     {'range': [deltacurrmonth*0.75, deltacurrmonth*0.9], 'color': '#ebb434'},
+                     {'range': [deltacurrmonth*0.9, deltacurrmonth], 'color': '#eb6e34'},
+                     {'range': [deltacurrmonth,gaugerangecurrmonth], 'color': '#eb3434'},
+                     ],
+                  'threshold': {'line': {'color': "#5c0000", 'width': 4}, 'thickness': 0.75, 'value': deltacurrmonth}
                  }
-    gaugefighuidigemaand = go.Figure(go.Indicator(
-        domain = {'x': [0, 1], 'y': [0, 1]},
-        value = gaugegepland,
+    gaugestepsnextmonth = {'axis': {'range': [None, gaugerangenextmonth]},
+                 'bar': {'color': '#0065fc'},
+                 'steps': [
+                     {'range': [0, deltanextmonth*0.5], 'color': '#3deb34'},
+                     {'range': [deltanextmonth*0.5, deltanextmonth*0.75], 'color': '#b4eb34'},
+                     {'range': [deltanextmonth*0.75, deltanextmonth*0.9], 'color': '#ebb434'},
+                     {'range': [deltanextmonth*0.9, deltanextmonth], 'color': '#eb6e34'},
+                     {'range': [deltanextmonth,gaugerangenextmonth], 'color': '#eb3434'},
+                     ],
+                  'threshold': {'line': {'color': "#5c0000", 'width': 4}, 'thickness': 0.75, 'value': deltanextmonth}
+                 }    
+               
+    gaugefig = go.Figure()
+    
+    gaugefig.add_trace(go.Indicator(
+        domain = {'x': [0, 0.5], 'y': [0, 1]},
+        value = gaugegeplandcurrmonth,
         mode = "gauge+number+delta",
         title = {'text': "Totale uren voor " + datetime.strptime(monthtoshow,'%Y%m').strftime('%B')},
-        delta = {'reference': delta},
-        gauge = gaugesteps
-    ))   
-    gaugefighuidigemaand.update_layout(paper_bgcolor='rgba(0,0,0,0)', 
+        delta = {'reference': deltacurrmonth},
+        gauge = gaugestepscurrmonth
+    ))
+    gaugefig.add_trace(go.Indicator(
+        domain = {'x': [0.6, 1], 'y': [0, 1]},
+        value = gaugegeplandnextmonth,
+        mode = "gauge+number+delta",
+        title = {'text': "Totale uren voor " + datetime.strptime(nextmonthtoshow,'%Y%m').strftime('%B')},
+        delta = {'reference': deltanextmonth},
+        gauge = gaugestepsnextmonth
+    ))    
+    
+
+    gaugefig.update_layout(paper_bgcolor='rgba(0,0,0,0)', 
                                         plot_bgcolor='rgba(0,0,0,0)',)
 
 
 
 
-    graphdata = {'nietingepland': bars, 'nietingeplandepics': epicbars, 'gaugefighuidigemaand': gaugefighuidigemaand}
+    graphdata = {'nietingepland': bars, 'nietingeplandepics': epicbars, 'gaugefig': gaugefig}
     
     columntypes = {}
     for key, value in kaarten[next(iter(kaarten))].items():
@@ -456,7 +494,7 @@ def get_data():
     }
 
 # --! Run function for the first time to get all data
-get_data()
+
 
                                 
 #--! Create layout function. Only create a simple layout with a few components. The rest will be loaded using callbacks.
@@ -768,7 +806,6 @@ def create_maindiv(value, n_clicks):
                                 children=[
                                     html.H4('Uitleg'),
                                     dcc.Markdown('''In dit tabblad is een middellange termijnplanning te zien.'''),
-                                    dcc.Markdown('''Vanaf ''' + datetime.strftime(datetime.now() ,'%A %-d %B') + ''' tot en met ''' + datetime.strftime(datetime.now() - timedelta(days=-30),'%A %-d %B'),)
 
                                     ]
                                 ),
@@ -776,12 +813,15 @@ def create_maindiv(value, n_clicks):
                                 className='maindivs',
                                 style=globals['styles']['maindivs'],  
                                 children=[
-                                    html.H5('Totalen'),
+                                    html.H4('Totalen'),
+                                    dcc.Markdown('''Hieronder staan twee totaaloverzichten van de aankomende maanden.'''),
+                                    dcc.Markdown('''De blauwe balk geeft de ingeplande uren weer. De streep geeft de beschikbare uren aan.'''),
+                                    dcc.Markdown('''Het kleine getal eronder geeft aan hoeveel uren tekort/over zijn voor die maand.'''),
                                     html.Div(
                                         style=globals['styles']['divgraphs'],
                                         children=[
                                             dcc.Graph(
-                                                figure=(data['graphdata']['gaugefighuidigemaand'])
+                                                figure=(data['graphdata']['gaugefig'])
                                                 )
                                             ]
                                         )
