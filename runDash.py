@@ -392,39 +392,43 @@ def get_data():
                          opacity='0.6'))
 
     # create figure for gauge (planned vs available hours)
-    if int(datetime.strftime(datetime.now(), '%d')) >15: 
-        monthtoshow = datetime.strftime(datetime.now() + timedelta(days=20), '%Y%m')
-        nextmonthtoshow = datetime.strftime(datetime.now() + timedelta(days=50), '%Y%m')
-    else:
-        monthtoshow = datetime.strftime(datetime.now(), '%Y%m')
-        nextmonthtoshow = datetime.strftime(datetime.now() + timedelta(days=20), '%Y%m')
-    
-    gaugegeplandcurrmonth = round(sum([value for card in urenperdagperkaart.values() for keys,value in card['urenperperiode'].items() if keys==monthtoshow]))
-    gaugegeplandnextmonth = round(sum([value for card in urenperdagperkaart.values() for keys,value in card['urenperperiode'].items() if keys==nextmonthtoshow]))
+    thismonth = datetime.strftime(datetime.now(), '%Y%m')
+    nextmonth = str(int(datetime.strftime(datetime.now(), '%Y%m')) + 1)
+    twomonths = str(int(datetime.strftime(datetime.now(), '%Y%m')) + 2)
 
-    deltacurrmonth = round(sum([value for card in beschikbareuren.values() for keys,value in card['urenperperiode'].items() if keys==monthtoshow]))
-    deltanextmonth = round(sum([value for card in beschikbareuren.values() for keys,value in card['urenperperiode'].items() if keys==nextmonthtoshow]))
+    gaugegeplandthismonth = round(sum([value for card in urenperdagperkaart.values() for keys,value in card['urenperperiode'].items() if keys==thismonth]))
+    gaugegeplandnextmonth = round(sum([value for card in urenperdagperkaart.values() for keys,value in card['urenperperiode'].items() if keys==nextmonth]))
+    gaugegeplandtwomonths = round(sum([value for card in urenperdagperkaart.values() for keys,value in card['urenperperiode'].items() if keys==twomonths]))
 
-    if deltacurrmonth > gaugegeplandcurrmonth:
-        gaugerangecurrmonth = deltacurrmonth + 20
+    deltathismonth = round(sum([value for card in beschikbareuren.values() for keys,value in card['urenperperiode'].items() if keys==thismonth]))
+    deltanextmonth = round(sum([value for card in beschikbareuren.values() for keys,value in card['urenperperiode'].items() if keys==nextmonth]))
+    deltatwomonths = round(sum([value for card in beschikbareuren.values() for keys,value in card['urenperperiode'].items() if keys==twomonths]))
+
+    if deltathismonth > gaugegeplandthismonth:
+        gaugerangethismonth = deltathismonth + 20
     else:
-        gaugerangecurrmonth = gaugegeplandcurrmonth + 20
+        gaugerangethismonth = gaugegeplandthismonth + 20
 
     if deltanextmonth > gaugegeplandnextmonth:
         gaugerangenextmonth = deltanextmonth + 20
     else:
-        gaugerangenextmonth = gaugegeplandnextmonth + 20    
+        gaugerangenextmonth = gaugegeplandnextmonth + 20
 
-    gaugestepscurrmonth = {'axis': {'range': [None, gaugerangecurrmonth]},
+    if deltatwomonths > gaugegeplandtwomonths:
+        gaugerangetwomonths = deltatwomonths + 20
+    else:
+        gaugerangetwomonths = gaugegeplandtwomonths + 20
+
+    gaugestepsthismonth = {'axis': {'range': [None, gaugerangethismonth]},
                  'bar': {'color': '#3eb6eb'},
                  'steps': [
-                     {'range': [0, deltacurrmonth*0.5], 'color': '#3deb34'},
-                     {'range': [deltacurrmonth*0.5, deltacurrmonth*0.75], 'color': '#b4eb34'},
-                     {'range': [deltacurrmonth*0.75, deltacurrmonth*0.9], 'color': '#ebb434'},
-                     {'range': [deltacurrmonth*0.9, deltacurrmonth], 'color': '#eb6e34'},
-                     {'range': [deltacurrmonth,gaugerangecurrmonth], 'color': '#eb3434'},
+                     {'range': [0, deltathismonth*0.5], 'color': '#3deb34'},
+                     {'range': [deltathismonth*0.5, deltathismonth*0.75], 'color': '#b4eb34'},
+                     {'range': [deltathismonth*0.75, deltathismonth*0.9], 'color': '#ebb434'},
+                     {'range': [deltathismonth*0.9, deltathismonth], 'color': '#eb6e34'},
+                     {'range': [deltathismonth,gaugerangethismonth], 'color': '#eb3434'},
                      ],
-                  'threshold': {'line': {'color': "#5c0000", 'width': 4}, 'thickness': 0.75, 'value': deltacurrmonth}
+                  'threshold': {'line': {'color': "#5c0000", 'width': 4}, 'thickness': 0.75, 'value': deltathismonth}
                  }
     gaugestepsnextmonth = {'axis': {'range': [None, gaugerangenextmonth]},
                  'bar': {'color': '#3eb6eb'},
@@ -436,30 +440,48 @@ def get_data():
                      {'range': [deltanextmonth,gaugerangenextmonth], 'color': '#eb3434'},
                      ],
                   'threshold': {'line': {'color': "#5c0000", 'width': 4}, 'thickness': 0.75, 'value': deltanextmonth}
-                 }    
-               
+                 }  
+    gaugestepstwomonths = {'axis': {'range': [None, gaugerangetwomonths]},
+                 'bar': {'color': '#3eb6eb'},
+                 'steps': [
+                     {'range': [0, deltatwomonths*0.5], 'color': '#3deb34'},
+                     {'range': [deltatwomonths*0.5, deltatwomonths*0.75], 'color': '#b4eb34'},
+                     {'range': [deltatwomonths*0.75, deltatwomonths*0.9], 'color': '#ebb434'},
+                     {'range': [deltatwomonths*0.9, deltatwomonths], 'color': '#eb6e34'},
+                     {'range': [deltatwomonths,gaugerangetwomonths], 'color': '#eb3434'},
+                     ],
+                  'threshold': {'line': {'color': "#5c0000", 'width': 4}, 'thickness': 0.75, 'value': deltatwomonths}
+                 }  
     gaugefig = go.Figure()
-    
+
     gaugefig.add_trace(go.Indicator(
-        domain = {'x': [0, 0.5], 'y': [0, 1]},
-        value = gaugegeplandcurrmonth,
+        domain = {'x': [0, 0.3], 'y': [0, 1]},
+        value = gaugegeplandthismonth,
         mode = "gauge+number+delta",
-        title = {'text': "Totale uren voor " + datetime.strptime(monthtoshow,'%Y%m').strftime('%B')},
-        delta = {'reference': deltacurrmonth},
-        gauge = gaugestepscurrmonth
+        title = {'text': "Totale uren voor " + datetime.strptime(thismonth,'%Y%m').strftime('%B')},
+        delta = {'reference': deltathismonth},
+        gauge = gaugestepsthismonth
     ))
     gaugefig.add_trace(go.Indicator(
-        domain = {'x': [0.6, 1], 'y': [0, 1]},
+        domain = {'x': [0.35, 0.65], 'y': [0, 1]},
         value = gaugegeplandnextmonth,
         mode = "gauge+number+delta",
-        title = {'text': "Totale uren voor " + datetime.strptime(nextmonthtoshow,'%Y%m').strftime('%B')},
+        title = {'text': "Totale uren voor " + datetime.strptime(nextmonth,'%Y%m').strftime('%B')},
         delta = {'reference': deltanextmonth},
         gauge = gaugestepsnextmonth
     ))    
-    
+    gaugefig.add_trace(go.Indicator(
+        domain = {'x': [0.7, 1], 'y': [0, 1]},
+        value = gaugegeplandtwomonths,
+        mode = "gauge+number+delta",
+        title = {'text': "Totale uren voor " + datetime.strptime(twomonths,'%Y%m').strftime('%B')},
+        delta = {'reference': deltatwomonths},
+        gauge = gaugestepstwomonths
+    ))     
 
     gaugefig.update_layout(paper_bgcolor='rgba(0,0,0,0)', 
                                         plot_bgcolor='rgba(0,0,0,0)',)
+
 
 
 
