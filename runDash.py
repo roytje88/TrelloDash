@@ -416,7 +416,7 @@ def get_data():
         gaugerangenextmonth = gaugegeplandnextmonth + 20    
 
     gaugestepscurrmonth = {'axis': {'range': [None, gaugerangecurrmonth]},
-                 'bar': {'color': '#0065fc'},
+                 'bar': {'color': '#3eb6eb'},
                  'steps': [
                      {'range': [0, deltacurrmonth*0.5], 'color': '#3deb34'},
                      {'range': [deltacurrmonth*0.5, deltacurrmonth*0.75], 'color': '#b4eb34'},
@@ -427,7 +427,7 @@ def get_data():
                   'threshold': {'line': {'color': "#5c0000", 'width': 4}, 'thickness': 0.75, 'value': deltacurrmonth}
                  }
     gaugestepsnextmonth = {'axis': {'range': [None, gaugerangenextmonth]},
-                 'bar': {'color': '#0065fc'},
+                 'bar': {'color': '#3eb6eb'},
                  'steps': [
                      {'range': [0, deltanextmonth*0.5], 'color': '#3deb34'},
                      {'range': [deltanextmonth*0.5, deltanextmonth*0.75], 'color': '#b4eb34'},
@@ -492,9 +492,6 @@ def get_data():
             }
                     
     }
-
-# --! Run function for the first time to get all data
-
 
                                 
 #--! Create layout function. Only create a simple layout with a few components. The rest will be loaded using callbacks.
@@ -566,7 +563,7 @@ app.config['suppress_callback_exceptions'] = True
     Input('refreshdatabtn', 'n_clicks')]
     )
 def create_maindiv(value, n_clicks):
-    # first retrieve all data again
+    # first retrieve all data
     get_data()
     daterefreshed = datetime.strftime(datetime.now(),'%A %-d %B, %H:%M')
     # Return all other divs
@@ -804,7 +801,7 @@ def create_maindiv(value, n_clicks):
                                 className='maindivs',
                                 style=globals['styles']['maindivs'],  
                                 children=[
-                                    html.H4('Uitleg'),
+                                    html.H3('Uitleg'),
                                     dcc.Markdown('''In dit tabblad is een middellange termijnplanning te zien.'''),
 
                                     ]
