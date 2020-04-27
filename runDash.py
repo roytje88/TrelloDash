@@ -57,7 +57,7 @@ globals['styles']['divgraphs'] = {'background-color': 'rgba(62,182,235,0.1)',
                                 }
 globals['styles']['dropdowns'] = {'margin-left': '1%', 'margin-right': '2%'}
 
-globals['graphlayouts']= {'bars': go.Layout(barmode='stack', paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')}
+globals['graphlayouts']= {'bars': go.Layout(barmode='stack', paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', hovermode='closest')}
 
 #--! Create function to refresh data
 
@@ -332,7 +332,7 @@ def get_data():
             for m in j['urenperperiode'].keys():
                 if m==k[0:4]+k[5:7]:
                     j['urenperperiode'][m] += l
-        del j['urenperdag']
+
     
     # do the same for available hours 
     for i,j in beschikbareuren.items():
@@ -340,7 +340,7 @@ def get_data():
             for m in j['urenperperiode'].keys():
                 if m==k[0:4]+k[5:7]:
                     j['urenperperiode'][m] += l
-        del j['urenperdag']
+
     
     # create data for a dataframe with the hours per month
     dfurenpermaand = copy.deepcopy(urenperdagperkaart)
@@ -390,8 +390,43 @@ def get_data():
                          text=[value for value in epicsforbarchart.values()],
                          textposition='outside',
                          opacity='0.6'))
-    
-    graphdata = {'nietingepland': bars, 'nietingeplandepics': epicbars}
+
+    # create figure for gauge (planned vs available hours)
+    if int(datetime.strftime(datetime.now(), '%d')) >15: 
+        monthtoshow = datetime.strftime(datetime.now() + timedelta(days=20), '%Y%m')
+    else:
+        monthtoshow = datetime.strftime(datetime.now(), '%Y%m')
+    gaugegepland = round(sum([value for card in urenperdagperkaart.values() for keys,value in card['urenperperiode'].items() if keys==monthtoshow]))
+    delta = round(sum([value for card in beschikbareuren.values() for keys,value in card['urenperperiode'].items() if keys==monthtoshow]))
+    if delta > gaugegepland:
+        gaugerange = delta + 20
+    else:
+        gaugerange = gaugegepland + 20
+    gaugesteps = {'axis': {'range': [None, gaugerange]},
+                 'steps': [
+                     {'range': [0, delta*0.5], 'color': '#3deb34'},
+                     {'range': [delta*0.5, delta*0.75], 'color': '#b4eb34'},
+                     {'range': [delta*0.75, delta*0.9], 'color': '#ebb434'},
+                     {'range': [delta*0.9,gaugerange], 'color': '#eb3434'},
+                     ],
+                  'threshold': {'line': {'color': "#5c0000", 'width': 4}, 'thickness': 0.75, 'value': delta}
+
+                 }
+    gaugefighuidigemaand = go.Figure(go.Indicator(
+        domain = {'x': [0, 1], 'y': [0, 1]},
+        value = gaugegepland,
+        mode = "gauge+number+delta",
+        title = {'text': "Totale uren voor " + datetime.strptime(monthtoshow,'%Y%m').strftime('%B')},
+        delta = {'reference': delta},
+        gauge = gaugesteps
+    ))   
+    gaugefighuidigemaand.update_layout(paper_bgcolor='rgba(0,0,0,0)', 
+                                        plot_bgcolor='rgba(0,0,0,0)',)
+
+
+
+
+    graphdata = {'nietingepland': bars, 'nietingeplandepics': epicbars, 'gaugefighuidigemaand': gaugefighuidigemaand}
     
     columntypes = {}
     for key, value in kaarten[next(iter(kaarten))].items():
@@ -507,80 +542,7 @@ def create_maindiv(value, n_clicks):
                 className='Tabs', 
                 children=[
                     # Create first tab
-                    dcc.Tab(
-                        label='Urenverdeling',
-                        style=globals['styles']['tabs'], 
-                        children=[
-                            html.Div(
-                                className='tab1_div1',
-                                style=globals['styles']['maindivs'],
-                                children=[
-                                    html.H3('Uitleg'),
-                                    html.Div(
-                                        style=globals['styles']['divgraphs'],
-                                        children=[                                    
-                                            dcc.Markdown('''In dit tabblad staan de uren, zoals ze op Trello staan. In het eerste blok wat er **wel** is ingepland, daaronder wat er **niet** is ingepland.'''),
-                                            ]
-                                        ),
-                                    ]
-                                ),                            
-                            html.Div(
-                                className='tab1_div2',
-                                style=globals['styles']['maindivs'],
-                                children=[
-                                    html.H4('Ingeplande uren per categorie'),
-                                    dcc.Dropdown(
-                                        style = globals['styles']['dropdowns'],
-                                        id='dropdownurenpermaand',
-                                        options=[{'label':name, 'value':name} for name in data['arrays']['categories'] if name != None],
-                                        multi=True,
-                                        searchable=False,
-                                        value = data['arrays']['categories']
-                                        ),
-                                    html.Div(
-                                        style=globals['styles']['divgraphs'],
-                                        children=[                                    
-                                            dcc.Graph(id='urenpermaand')
-                                           ]
-                                        ),
-                                    ]
-                                ),
-                            html.Div(
-                                className='tab1_div3',
-                                style=globals['styles']['maindivs'],
-                                children=[
-                                    html.H4('Nog in te plannen uren (per lijst)'),
-                                    html.Div(
-                                        style=globals['styles']['divgraphs'],
-                                        children=[
-                                            dcc.Graph(
-                                                id='graph_nietingepland',
-                                                figure={'data': data['graphdata']['nietingepland'],
-                                                        'layout': globals['graphlayouts']['bars']}                          
-                                                )
-                                            ]
-                                        ),
-                                    ]
-                                ),
-                            html.Div(
-                                className='tab1_div4',
-                                style=globals['styles']['maindivs'],
-                                children=[
-                                    html.H4('Nog in te plannen uren (per epic)'),
-                                    html.Div(
-                                        style=globals['styles']['divgraphs'],
-                                        children=[                                    
-                                            dcc.Graph(
-                                                id='graph_nietingepland_epics',
-                                                figure={'data': data['graphdata']['nietingeplandepics'],
-                                                        'layout': globals['graphlayouts']['bars']}
-                                                )      
-                                            ]
-                                        ),
-                                    ]
-                                ),                                 
-                            ]
-                        ),                        
+                                            
                     dcc.Tab(
                         label='Gantt charts',
                         style=globals['styles']['tabs'], 
@@ -715,7 +677,121 @@ def create_maindiv(value, n_clicks):
                                     ]
                                 ),                                
                             ]
-                        )                        
+                        ),
+                    dcc.Tab(
+                        label='Langetermijnplanning',
+                        style=globals['styles']['tabs'],                         
+                        children=[
+                            html.Div(
+                                className='maindivs',
+                                style=globals['styles']['maindivs'],
+                                children=[
+                                    html.H3('Uitleg'),
+                                    html.Div(
+                                        style=globals['styles']['divgraphs'],
+                                        children=[                                    
+                                            dcc.Markdown('''In dit tabblad wordt een langetermijnplanning getoond.'''),
+                                            dcc.Markdown('''De focus hierbij ligt vooral op de categorieen.'''),
+                                            ]
+                                        ),
+                                    ]
+                                ), 
+                            html.Div(
+                                className='maindivs',
+                                style=globals['styles']['maindivs'],
+                                children=[
+                                    html.H4('Ingeplande uren per categorie'),
+                                    dcc.Dropdown(
+                                        style = globals['styles']['dropdowns'],
+                                        id='dropdownurenpermaand',
+                                        options=[{'label':name, 'value':name} for name in data['arrays']['categories'] if name != None],
+                                        multi=True,
+                                        searchable=False,
+                                        value = data['arrays']['categories']
+                                        ),
+                                    html.Div(
+                                        style=globals['styles']['divgraphs'],
+                                        children=[                                    
+                                            dcc.Graph(id='urenpermaand')
+                                           ]
+                                        ),
+                                    ]
+                                ),
+                            html.Div(
+                                className='tab1_div3',
+                                style=globals['styles']['maindivs'],
+                                children=[
+                                    html.H4('Nog in te plannen uren (per lijst)'),
+                                    dcc.Markdown('''*Nieuw* zijn werkzaamheden die **nog niet** zijn besproken of ze worden gedaan.'''),
+                                    dcc.Markdown('''*Wensenlijst* zijn werkzaamheden die **wel** zijn besproken, maar **geen prioriteit** hebben.'''),
+                                    dcc.Markdown('''*Inplannen* zijn werkzaamheden die **moeten** gebeuren.'''),
+                                    dcc.Markdown('''**NB:** Alleen werkzaamheden waarvan we een ureninschatting kunnen maken, worden getoond!'''),                                    
+                                    html.Div(
+                                        style=globals['styles']['divgraphs'],
+                                        children=[
+                                            dcc.Graph(
+                                                id='graph_nietingepland',
+                                                figure={'data': data['graphdata']['nietingepland'],
+                                                        'layout': globals['graphlayouts']['bars']}                          
+                                                )
+                                            ]
+                                        ),
+                                    ]
+                                ), 
+                            html.Div(
+                                className='tab1_div4',
+                                style=globals['styles']['maindivs'],
+                                children=[
+                                    html.H4('Nog in te plannen uren (per epic)'),
+                                    dcc.Markdown('''**NB:** Alleen werkzaamheden waarvan we een ureninschatting kunnen maken, worden getoond!'''),                                     
+                                    html.Div(
+                                        style=globals['styles']['divgraphs'],
+                                        children=[                                    
+                                            dcc.Graph(
+                                                id='graph_nietingepland_epics',
+                                                figure={'data': data['graphdata']['nietingeplandepics'],
+                                                        'layout': globals['graphlayouts']['bars']}
+                                                )      
+                                            ]
+                                        ),
+                                    ]
+                                ),                                                                   
+                            ]
+                        ), 
+                    dcc.Tab(
+                        style=globals['styles']['tabs'],  
+                        label='Tactische planning',
+                        children=[
+                            html.Div(
+                                className='maindivs',
+                                style=globals['styles']['maindivs'],  
+                                children=[
+                                    html.H4('Uitleg'),
+                                    dcc.Markdown('''In dit tabblad is een middellange termijnplanning te zien.'''),
+                                    dcc.Markdown('''Vanaf ''' + datetime.strftime(datetime.now() ,'%A %-d %B') + ''' tot en met ''' + datetime.strftime(datetime.now() - timedelta(days=-30),'%A %-d %B'),)
+
+                                    ]
+                                ),
+                            html.Div(
+                                className='maindivs',
+                                style=globals['styles']['maindivs'],  
+                                children=[
+                                    html.H5('Totalen'),
+                                    html.Div(
+                                        style=globals['styles']['divgraphs'],
+                                        children=[
+                                            dcc.Graph(
+                                                figure=(data['graphdata']['gaugefighuidigemaand'])
+                                                )
+                                            ]
+                                        )
+
+                                    ]
+                                )                            
+                            ]
+
+
+                        )                                     
                     ]
                 )
             ]
@@ -835,5 +911,5 @@ def update_urenpermaand(value):
 
 #--! Check if this is the main app and if so, run Dash!
 if __name__ == '__main__':
-    app.run_server(debug=False,host='0.0.0.0', port=8050)
+    app.run_server(debug=True,host='0.0.0.0', port=8050)
     
