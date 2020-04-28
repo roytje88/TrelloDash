@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
+#In[]
 import os,json,shutil
 
 # start setup
@@ -84,6 +85,12 @@ def load_update(file, template):
     # write dictionary to file
     with open(file, 'w') as outfile:
         json.dump(c, outfile, indent=4, sort_keys=True)
+
+# To Do: definition for answers per type
+## str
+## list
+## dict
+## bool
 
 def new_fill(file, template):
     #check if folder exists, else create it
