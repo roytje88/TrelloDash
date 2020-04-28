@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-#In[]
 import os,json,shutil
 
 # start setup
@@ -28,9 +27,9 @@ def question_list(i):
     answer.remove("x")
     return answer
 ## bool
-def question_bool(k):
+def question_bool(i):
         while True:
-            answer = input('ADD VALUE FOR "'+k+'"? (True/False)')
+            answer = input('ADD VALUE FOR "'+str(i)+'"? (True/False) ')
             if answer == 'True':
                 v = bool(answer)
                 break
@@ -41,40 +40,28 @@ def question_bool(k):
                 print("Value is not boolean. Try again.")
                 continue
         return v
-## dict
-def question_dict():
-        elif isinstance(template[i],dict):
-            for k,v in template[i].items():
-                question_list()
-                question_str()
-                question_bool()
 
 def question_per_type(i,t):
     if t == str:
         answer = question_str(i)
-        print('ADDING VALUE FOR '+i+': '+answer)
+        print('ADDING VALUE FOR '+str(i)+': '+str(answer))
         return answer
     elif t ==list:
         answer = question_list(i)
-        print("ADDIND LIST FOR "+i+": "+answer)
+        print('ADDIND LIST FOR '+str(i)+': '+str(answer))
         return answer
-    elif isinstance(template[i],dict):
-    ## FROM HERE
-            for k,v in template[i].items():
-                if isinstance(v,bool):
-                    template[i] = question_bool(i)
-                    print('VALUE ADDED FOR '+k+' in '+str(i)+': '+str(template[i][k]))
-
+    elif t == bool:
+        answer = question_bool(i)
+        print('ADDING BOOLEAN FOR '+str(i)+': '+str(answer))
+        return answer
 
 def load_update(file, template):
     # load file
     with open(file) as json_file:
         c = json.load(json_file)
     # check if update is needed
-    if c['Version'] == template['Version']:
-        print(file+': No change in Version, so no update needed')
-    elif c.keys() == template.keys():
-        print('No difference in keys. Only updating version value')
+    if c.keys() == template.keys():
+        print(file+': No difference in keys. Only updating version value')
     else:
         # add new entries
         for i in template.keys():
@@ -110,7 +97,11 @@ def new_fill(file, template):
         if i == '__Comment' or i == 'Version':
             print('skipping '+i)
         else:
-            template[i] = question_per_type(i,type(template[i]))
+            if isinstance(template[i],dict):
+                for k,v in template[i].items():
+                    template[i][k] = question_per_type(k,type(v))
+            else:
+                template[i] = question_per_type(i,type(template[i]))
     # write values to file
     with open(file, 'w') as outfile:
         json.dump(template, outfile, indent=4, sort_keys=True)
