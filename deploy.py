@@ -11,7 +11,7 @@ configurationfile = './configuration/configuration.txt'
 credentialsfile = './configuration/credentials.txt'
 
 ### define funcions for loading and updating files
-
+#In[]
 # To Do: definition for answers per type
 ## str
 def question_str(i):
@@ -67,8 +67,8 @@ def load_update(file, template):
         # add new entries
         for i in template.keys():
             if c.get(i) == None:
-                # To Do: add chek for type
-                new = {i:input("Add value for "+i+": ")}
+                # To Do: debug iteration
+                new = {i:question_per_type(i)}
                 c.update(new)
                 print("Added: "+str(new))
         # remove removed entries
@@ -86,14 +86,8 @@ def load_update(file, template):
     with open(file, 'w') as outfile:
         json.dump(c, outfile, indent=4, sort_keys=True)
 
-# To Do: definition for answers per type
-## str
-## list
-## dict
-## bool
-
 def new_fill(file, template):
-    #check if folder exists, else create it
+    #check if folder exists, githelse create it
     try:
         os.stat('./configuration')
     except:
@@ -125,7 +119,7 @@ def load(file):
         load_update(file, template)
     except:
         new_fill(file, template)
-
+#In[]
 # create, load or update files
 load(configurationfile)
 load(credentialsfile)
