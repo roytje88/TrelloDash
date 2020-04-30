@@ -12,7 +12,6 @@ credentialsfile = './configuration/credentials.txt'
 
 ### define funcions for loading and updating files
 #In[]
-# To Do: definition for answers per type
 ## str
 def question_str(i):
     answer = input('Add value for '+i+': ')
@@ -68,7 +67,7 @@ def load_update(file, template):
         for i in template.keys():
             if c.get(i) == None:
                 # To Do: debug iteration
-                new = {i:question_per_type(i)}
+                new = {i:question_per_type(i,type(template[i]))}
                 c.update(new)
                 print("Added: "+str(new))
         # remove removed entries
@@ -80,6 +79,7 @@ def load_update(file, template):
         for j in remove:
             c.pop(j)
             print("removed: "+i)
+        print(file+": File is synced with new template, and values wil be added to file.")
     # copy version from config_template to config
     c['Version'] = template['Version']
     # write dictionary to file
