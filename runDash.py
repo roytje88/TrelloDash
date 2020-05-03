@@ -1,4 +1,4 @@
-import os, json, locale, requests, dash, dash_table, copy, time
+import os, json, locale, requests, dash, dash_table, copy, time, flask, base64
 import dash_core_components as dcc
 import dash_html_components as html
 import plotly.graph_objects as go
@@ -8,7 +8,7 @@ import plotly.figure_factory as ff
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
 from dash.dependencies import Input, Output
 from datetime import date,datetime,timedelta,time
-
+ 
 #--! Check if app is deployed
 try:
     with open('./configuration/credentials.txt') as json_file:
@@ -112,13 +112,12 @@ def get_data():
     chosenlists.extend(config.get('Blocked'))
     chosenlists.extend(config.get('Doing'))
     chosenlists.extend(config.get('Done'))
-    if config['Script options']['Calculate hours'] == True:
-        for i in config.get('Epics'):
-            chosenlists.append(i)
-        for i in config.get('Always continuing'):
-            chosenlists.append(i)
-        for i in config.get('List with Epics Done'):
-            chosenlists.append(i)
+    for i in config.get('Epics'):
+        chosenlists.append(i)
+    for i in config.get('Always continuing'):
+        chosenlists.append(i)
+    for i in config.get('List with Epics Done'):
+        chosenlists.append(i)
     
     # create function to convert cardid to datetime
     def idtodate(cardid):
@@ -557,7 +556,7 @@ def make_layout():
             dcc.Dropdown(
                 id='dropdown_boards',
                 options=[{'label': i['name'], 'value': i['id']} for i in boards],
-                value = boards[-1]['id'],
+                value = boards[0]['id'],
                 ),
             html.Button('Data verversen', id='refreshdatabtn', n_clicks=0),
             html.Div(
@@ -850,11 +849,109 @@ def create_maindiv(value, n_clicks):
                             ]
 
 
-                        )                                     
+                        ),
+                    dcc.Tab(
+                        style=globals['styles']['tabs'],  
+                        label='Configuratie',
+                        children=[
+                            html.Div(
+                                className='maindivs',
+                                style=globals['styles']['maindivs'],  
+                                children=[
+                                    html.H3('Uitleg'),
+                                    dcc.Markdown('''Klik op de button hieronder om de huidige configuratie te downloaden.'''),
+                                    html.A(id='export_link', href='/configuration/', children=[html.Button(id='export_button', type='button', children=['Export'])]),
+
+                                    dcc.Markdown('''Pas het bestand aan en upload deze hieronder.'''),
+                                    dcc.Upload(
+                                        id='configupload',
+                                        children=html.Div([
+                                            'Sleep het bestand of ',
+                                            html.A('selecteer het bestand')
+
+                                        ]),
+                                        style=globals['styles']['divgraphs'],
+                                        multiple=False,
+
+                                        ),
+                             
+                                    html.Div(id='confirmupload',style=globals['styles']['divgraphs'])
+                                    ]
+                                ),                           
+                            ]
+
+
+                        )                                                              
                     ]
                 )
             ]
         )
+
+
+#---! configupload
+@app.callback(Output('confirmupload', 'children'),
+    [Input('configupload','contents')]
+
+)
+def confirm_upload(contents):
+    global newconfig
+    if contents is not None:
+        try:
+            newconfig = json.loads(base64.b64decode(contents[23:]).decode('ASCII'))
+            d = {}
+            for key,value in newconfig.items():
+                if type(value) == list:
+                    d[key] = ''
+                    for i in value:
+                        if d[key] == '':
+                            d[key] += i 
+                        else:
+                            if i == value[-1]:
+                                d[key] += (', '+i)
+                else:
+                    d[key] = value
+
+            return html.Div(
+                id='returneddiv',
+                style=globals['styles']['divgraphs'],
+                children=[ 
+                    dcc.Markdown('''Check hieronder of de juiste data is ingevoerd. Klik daarna daaronder op 'Opslaan'.'''),
+                    dash_table.DataTable(
+                        style_header={'backgroundColor': 'rgba(62,182,235,0.6)','color': 'black', 'fontWeight': 'bold', 'fontFamily': 'Arial'},
+                        style_cell = {'backgroundColor': 'rgba(62,182,235,0.2)', 'color': 'black','text-align': 'left', 'fontFamily': 'Arial'},                                                                
+                        columns=[{'name': 'Sleutel', 'id': 'Sleutel'}, {'name': 'Waarde', 'id': 'Waarde'}],
+                        data=[{'Sleutel': key, 'Waarde': value} for key, value in d.items()]
+
+                        ),
+                    html.Button(
+                        'Opslaan',
+                        id='save_button', 
+                        n_clicks=0
+                        ),
+                    html.Div(
+                        id='savedornot',
+                        
+                        )
+                    ]
+                )
+        except:
+            return html.H5('Het bestand is incorrect. Download en upload opnieuw!')
+
+    else:
+        return
+
+
+#---! save-button
+@app.callback(Output('savedornot','children'),
+    [Input('save_button','n_clicks'),])
+def save_fnct(n_clicks):
+    if n_clicks > 0:
+        with open('./configuration/configuration.txt','w') as outfile:
+            json.dump(newconfig, outfile, indent=4, sort_keys=True)
+        return 'Opgeslagen. Refresh de page.'
+    else:
+        return 
+
 
 #---! ganttpersoon 
 @app.callback(Output('ganttpersoon','figure'),
@@ -967,6 +1064,23 @@ def update_urenpermaand(value):
     return {
          'data': bars,
          'layout': layout}
+
+#--! App routes
+
+@app.server.route("/configuration/")
+def download_file():
+
+    return flask.send_file('./configuration/configuration.txt',
+        attachment_filename="configuration.txt",
+        as_attachment=True,
+        cache_timeout=0
+    )
+
+
+
+
+
+
 
 #--! Check if this is the main app and if so, run Dash!
 if __name__ == '__main__':

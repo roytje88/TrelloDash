@@ -75,10 +75,10 @@ def load_update(file, template):
         for i in c.keys():
             if template.get(i) == None:
                 remove.append(i)
-        print(remove)
+        print('Keys to remove: ', remove)
         for j in remove:
             c.pop(j)
-            print("removed: "+i)
+            print("removed: "+j)
         print(file+": File is synced with new template, and values wil be added to file.")
     # copy version from config_template to config
     c['Version'] = template['Version']
