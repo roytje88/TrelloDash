@@ -62,13 +62,14 @@ globals['graphlayouts']= {'bars': go.Layout(barmode='stack', paper_bgcolor='rgba
 
 #--! Create function to refresh data
 
-def get_data():
+def get_data(value):
     # set data variable to global to use in other functions
     global data
     # set all url variables
     keys = "key="+credentials.get('API key')+"&token="+credentials.get('API token')
     trello_base_url = "https://api.trello.com/1/"
-    board_url = trello_base_url+"boards/"+ config.get('Board ID')
+    board_url = trello_base_url+"boards/"+ value    
+    #board_url = trello_base_url+"boards/"+ config.get('Board ID')
     url_cards = board_url+"?cards=all&card_pluginData=true&card_attachments=true&card_customFieldItems=true&filter=all&"+keys
     url_lists = board_url+"/lists?filter=all&"+keys
     url_customfields = board_url+"/customFields?"+keys
@@ -555,12 +556,16 @@ def make_layout():
                         )
                     ]
                 ),
+
+
             html.H5('Kies hieronder een bord', style={'text-align': 'center'}),
             dcc.Dropdown(
                 id='dropdown_boards',
                 options=[{'label': i['name'], 'value': i['id']} for i in boards],
                 value = boards[0]['id'],
                 ),
+
+
             html.Button('Data verversen', id='refreshdatabtn', n_clicks=0),
             html.Div(
                 id='test'
@@ -588,7 +593,7 @@ app.config['suppress_callback_exceptions'] = True
     )
 def create_maindiv(value, n_clicks):
     # first retrieve all data
-    get_data()
+    get_data(value)
     daterefreshed = datetime.strftime(datetime.now(),'%A %-d %B, %H:%M')
     # Return all other divs
     return html.Div(
