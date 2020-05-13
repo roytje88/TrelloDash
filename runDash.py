@@ -8,6 +8,7 @@ import plotly.figure_factory as ff
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
 from dash.dependencies import Input, Output
 from datetime import date,datetime,timedelta,time
+from dateutil.relativedelta import relativedelta
  
 #--! Check if app is deployed
 try:
@@ -392,9 +393,12 @@ def get_data():
 
     # create figure for gauge (planned vs available hours)
     thismonth = datetime.strftime(datetime.now(), '%Y%m')
-    nextmonth = str(int(datetime.strftime(datetime.now(), '%Y%m')) + 1)
-    twomonths = str(int(datetime.strftime(datetime.now(), '%Y%m')) + 2)
-
+    nextmonth = (datetime.now() + relativedelta(months=1)).strftime('%Y%m')
+    twomonths = (datetime.now() + relativedelta(months=2)).strftime('%Y%m')
+    
+    arrays['threemonths'] = [(thismonth, datetime.strptime(thismonth,'%Y%m').strftime('%B')), (nextmonth, datetime.strptime(nextmonth,'%Y%m').strftime('%B')), (twomonths, datetime.strptime(twomonths,'%Y%m').strftime('%B'))]
+    
+    
     gaugegeplandthismonth = round(sum([value for card in urenperdagperkaart.values() for keys,value in card['urenperperiode'].items() if keys==thismonth]))
     gaugegeplandnextmonth = round(sum([value for card in urenperdagperkaart.values() for keys,value in card['urenperperiode'].items() if keys==nextmonth]))
     gaugegeplandtwomonths = round(sum([value for card in urenperdagperkaart.values() for keys,value in card['urenperperiode'].items() if keys==twomonths]))
@@ -484,7 +488,6 @@ def get_data():
 
 
 
-
     graphdata = {'nietingepland': bars, 'nietingeplandepics': epicbars, 'gaugefig': gaugefig}
     
     columntypes = {}
@@ -568,7 +571,7 @@ def make_layout():
 #--! Get CSS files and scripts and set App (including layout)        
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 external_scripts = ['https://cdn.plot.ly/plotly-locale-nl-latest.js']
-app = dash.Dash(external_stylesheets=external_stylesheets,external_scripts=external_scripts)        
+app = dash.Dash(__name__, external_stylesheets=external_stylesheets,external_scripts=external_scripts, url_base_pathname='/dash/')
 app.layout = make_layout
 #--! Set Dash to suppress callback exceptions, because some callbacks can only be made when the first callback in the main layout has been made.
 app.config['suppress_callback_exceptions'] = True
@@ -845,7 +848,31 @@ def create_maindiv(value, n_clicks):
                                         )
 
                                     ]
-                                )                            
+                                ),
+                            html.Div(
+                                className='maindivs',
+                                style=globals['styles']['maindivs'],  
+                                children=[
+                                    html.H4('Gantt'),
+                                    dcc.Dropdown(
+                                        style = globals['styles']['dropdowns'],
+                                        id='dropdowngantttactisch',
+                                        options=[{'label':j, 'value': i} for i,j in data['arrays']['threemonths']],
+                                        multi=False,
+                                        searchable=False,
+                                        value = data['arrays']['threemonths'][0][0],
+                                        ),
+                                    html.Div(
+                                        style=globals['styles']['divgraphs'],
+                                        children=[
+                                            dcc.Graph(id='gantttactisch'
+                                                )
+                                                
+                                            ]
+                                        )
+
+                                    ]
+                                ),
                             ]
 
 
@@ -886,6 +913,72 @@ def create_maindiv(value, n_clicks):
                 )
             ]
         )
+
+
+#---! gantttactisch
+@app.callback(Output('gantttactisch', 'figure'),
+    [Input('dropdowngantttactisch','value')]
+
+)
+
+def update_gantttactisch(v1):
+    if v1 != None: 
+        if v1[4:] == '12':
+            v1plus1 = str(int(v1[0:4])+1)+'01'
+        else:
+            v1plus1 = str(int(v1)+1)
+        if v1[4:] == '01':
+            v1min1 = str(int(v1[0:4])-1)+'12'
+        else:
+            v1min1 = str(int(v1)-1)
+        if v1[4:] == '11':
+            v1plus2 = str(int(v1[0:4])+1)+'01'
+        else:
+            v1plus2 = str(int(v1)+2)
+
+        import random
+        import numpy as np
+        from operator import itemgetter
+        ganttdata= []
+        monthkey = int(v1)
+        for i,j in data['kaarten'].items():
+            if j['Status'] in ['Niet gestart', 'Doing', 'Blocked']:
+                try:
+                    if int(datetime.strftime(j['Begindatum'], '%Y%m')) <= monthkey and int(datetime.strftime(j['Einddatum'], '%Y%m')) >= monthkey:
+                        if j['Begindatum'].date() < datetime.strptime(v1min1+'01','%Y%m%d').date():
+                            start=datetime.strptime(v1min1+'01','%Y%m%d').date()
+                        else:
+                            start = j['Begindatum'].date()
+                        if j['Einddatum'].date() >= datetime.strptime(v1plus2+'01','%Y%m%d').date():
+                            eind=datetime.strptime(v1plus2+'01','%Y%m%d').date()
+                        else:
+                            eind =  j['Einddatum'].date()
+                        ganttdata.append(dict(Task=j['Epic'],
+                                            Start=start,
+                                            Finish=eind,
+                                            Resource=j['Naam']
+                                            ))
+                except:
+                    pass
+        result = sorted(ganttdata, key=itemgetter('Task'))
+        rgb = []
+        for c in range(len(result)):
+            r = list(np.random.choice(range(256), size=3))
+            s2 = ','.join(map(str,r))
+            s1 = "rgb("
+            s3 = ")"
+            rgb.append(s1 + s2 + s3) 
+        fig = ff.create_gantt(result, index_col='Resource', show_colorbar=True, group_tasks=False, showgrid_x=True, showgrid_y=True, colors=rgb)
+        fig['layout'].update(paper_bgcolor='rgba(0,0,0,0)', 
+                            plot_bgcolor='rgba(0,0,0,0)',)
+
+        fig.add_trace(go.Scatter(mode='lines', x=[v1[0:4]+'-'+v1[4:]+'-01',v1[0:4]+'-'+v1[4:]+'-01'],y=[-1,len(result)], line={'shape': 'spline', 'color': 'black', 'width': 4}))
+        fig.add_trace(go.Scatter(mode='lines', x=[v1plus1[0:4]+'-'+v1plus1[4:]+'-01',v1plus1[0:4]+'-'+v1plus1[4:]+'-01'],y=[-1,len(result)], line={'shape': 'spline', 'color': 'black', 'width': 4}))
+        return fig               
+    else:
+        return {'data': [go.Pie()],'layout': go.Layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')}
+
+
 
 
 #---! configupload
@@ -1084,5 +1177,5 @@ def download_file():
 
 #--! Check if this is the main app and if so, run Dash!
 if __name__ == '__main__':
-    app.run_server(debug=True,host='0.0.0.0', port=8050)
+    app.run_server(debug=False,host='0.0.0.0', port=8050)
     
