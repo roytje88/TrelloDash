@@ -595,7 +595,7 @@ def create_maindiv(value, n_clicks):
     # first retrieve all data
     get_data(value)
     import os
-    if os.name='NT':
+    if os.name=='NT':
         daterefreshed = datetime.strftime(datetime.now(), '%A %d %b, %H:%M')
     else:
         daterefreshed = datetime.strftime(datetime.now(),'%A %-d %B, %H:%M')
