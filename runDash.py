@@ -594,7 +594,11 @@ app.config['suppress_callback_exceptions'] = True
 def create_maindiv(value, n_clicks):
     # first retrieve all data
     get_data(value)
-    daterefreshed = datetime.strftime(datetime.now(),'%A %-d %B, %H:%M')
+    import os
+    if os.name='NT':
+        daterefreshed = datetime.strftime(datetime.now(), '%A %d %b, %H:%M')
+    else:
+        daterefreshed = datetime.strftime(datetime.now(),'%A %-d %B, %H:%M')
     # Return all other divs
     return html.Div(
         className='', 
