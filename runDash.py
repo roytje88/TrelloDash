@@ -65,6 +65,10 @@ globals['graphlayouts']= {'bars': go.Layout(barmode='stack', paper_bgcolor='rgba
 def get_data(value):
     # set data variable to global to use in other functions
     global data
+    global config
+    with open('./configuration/configuration.txt') as json_file:
+        configfile = json.load(json_file)
+    config = configfile.get(value)
     # set all url variables
     keys = "key="+credentials.get('API key')+"&token="+credentials.get('API token')
     trello_base_url = "https://api.trello.com/1/"
@@ -195,7 +199,7 @@ def get_data(value):
     # add epicname
     epicIdNameCategory = []
     for i,j in kaarten.items():
-        epicIdNameCategory.append((i,j['Naam'],j['Categorie']))                    
+        epicIdNameCategory.append((i,j['Naam'],j[config.get('Custom Field for Categories')]))                    
     for i,j in kaarten.items():
         if j['epicid'] == []:
             j['Epic'] = 'Geen epic'
@@ -278,33 +282,51 @@ def get_data(value):
               'xaxis_months': list(dict.fromkeys([i[0:4]+"-"+i[5:7]+"-01" for i in dates])), 
               'perioden': list(dict.fromkeys([i[0:4]+i[5:7] for i in dates])),
               'statuses': list(dict.fromkeys([card['Status'] for card in kaarten.values()])), 
-              'categories': list(dict.fromkeys([card['Categorie'] for card in kaarten.values()])),
-              'persoon': list(dict.fromkeys([card['Hoofdverantwoordelijke'] if card['Hoofdverantwoordelijke'] != None else 'Geen hoofdverantwoordelijke' for card in kaarten.values() ])),
+              config.get('Custom Field for Categories'): list(dict.fromkeys([card[config.get('Custom Field for Categories')] for card in kaarten.values()])),
+              config.get('Custom Field for Person'): list(dict.fromkeys([card[config.get('Custom Field for Person')] if card[config.get('Custom Field for Person')] != None else 'Geen ' + config.get('Custom Field for Person') for card in kaarten.values() ])),
             
     }
               
-    # create dict to calculate the hours per day for each card          
-    urenperdagperkaart = {kaart['Naam']: {'Naam': kaart['Naam'],
-                                          'Leden': kaart['Leden'],
-                                          'Aangemaakt': kaart['Aangemaakt'],
-                                          'Epic': kaart['Epic'],
-                                          'shortUrl': kaart['shortUrl'],
-                                          'Begindatum': kaart['Begindatum'],
-                                          'Einddatum': kaart['Einddatum'],
-                                          'Gebied': kaart['Gebied'],
-                                          'Hoofdverantwoordelijke': kaart['Hoofdverantwoordelijke'],
-                                          'Categorie': kaart['Categorie'],
-                                          'Geplande uren': kaart['Geplande uren'],
-                                          'Cognosrapport': kaart['Cognosrapport'],
-                                          'Niet meenemen in telling': kaart['Niet meenemen in telling'],
-                                          'Lijst': kaart['Lijst'],
-                                          'Status': kaart['Status'],
-                                          'urenperdag': {i:0 for i in dates},
-                                          'urenperperiode': {i:0 for i in arrays['perioden']}}              
+    # create dict to calculate the hours per day for each card   
+    try:
+        urenperdagperkaart = {kaart['Naam']: {'Naam': kaart['Naam'],
+                                              'Leden': kaart['Leden'],
+                                              'Aangemaakt': kaart['Aangemaakt'],
+                                              'Epic': kaart['Epic'],
+                                              'shortUrl': kaart['shortUrl'],
+                                              config.get('Custom Field for Starting date'): kaart[config.get('Custom Field for Starting date')],
+                                              config.get('Custom Field for Ending date'): kaart[config.get('Custom Field for Ending date')],
+                                              'Gebied': kaart['Gebied'],
+                                              config.get('Custom Field for Person'): kaart[config.get('Custom Field for Person')],
+                                              config.get('Custom Field for Categories'): kaart[config.get('Custom Field for Categories')],
+                                              config.get('Custom Field with hours'): kaart[config.get('Custom Field with hours')],
+                                              'Cognosrapport': kaart['Cognosrapport'],
+                                              'Niet meenemen in telling': kaart['Niet meenemen in telling'],
+                                              'Lijst': kaart['Lijst'],
+                                              'Status': kaart['Status'],
+                                              'urenperdag': {i:0 for i in dates},
+                                              'urenperperiode': {i:0 for i in arrays['perioden']}}              
 
-                                         for kaart in kaarten.values()}
+                                             for kaart in kaarten.values()}
+    except:
+        urenperdagperkaart = {kaart['Naam']: {'Naam': kaart['Naam'],
+                                              'Leden': kaart['Leden'],
+                                              'Aangemaakt': kaart['Aangemaakt'],
+                                              'Epic': kaart['Epic'],
+                                              'shortUrl': kaart['shortUrl'],
+                                              config.get('Custom Field for Starting date'): kaart[config.get('Custom Field for Starting date')],
+                                              config.get('Custom Field for Ending date'): kaart[config.get('Custom Field for Ending date')],
+                                              config.get('Custom Field for Person'): kaart[config.get('Custom Field for Person')],
+                                              config.get('Custom Field for Categories'): kaart[config.get('Custom Field for Categories')],
+                                              config.get('Custom Field with hours'): kaart[config.get('Custom Field with hours')],
+                                              'Lijst': kaart['Lijst'], 
+                                              'Status': kaart['Status'],
+                                              'urenperdag': {i:0 for i in dates},
+                                              'urenperperiode': {i:0 for i in arrays['perioden']}}              
+
+                                             for kaart in kaarten.values()}
                                          
-    # do the same for available hours                                     
+    # do the same for available hours  
     beschikbareuren = {key: {'urenperdag': {i:0 for i in dates},
                              'urenperperiode': {i:0 for i in arrays['perioden']}}
                            for key in hours.keys()}
@@ -313,15 +335,15 @@ def get_data(value):
         for k,l in kaarten.items():
             if l['Niet meenemen in telling'] != True:
                 try:
-                    if l['Begindatum'].date() < datekey <= l['Einddatum'].date():
-                        delta = l['Einddatum'] - l['Begindatum']
+                    if l[config.get('Custom Field for Starting date')].date() < datekey <= l[config.get('Custom Field for Ending date')].date():
+                        delta = l[config.get('Custom Field for Ending date')] - l[config.get('Custom Field for Starting date')]
                         hoursperday = int(l[config.get('Custom Field with hours')])/int(delta.days)                
                         urenperdagperkaart[l['Naam']]['urenperdag'][i] = hoursperday
                 except:
                     pass
         for k,l in hours.items():
             try:
-                if l['Begindatum'].date() < datekey <= l['Einddatum'].date():
+                if l[config.get('Custom Field for Starting date')].date() < datekey <= l[config.get('Custom Field for Ending date')].date():
                     hoursperday = int(l[config.get('Custom Field with hours')])/int(30.4)                
                     beschikbareuren[k]['urenperdag'][i] = hoursperday
             except:
@@ -358,11 +380,11 @@ def get_data(value):
     bars = []
     labelsnietingepland = []
     for j in kaarten.values():
-        if j['Begindatum'] == None and j['Einddatum'] == None and j['Geplande uren'] !=None and j['Status'] == 'Niet gestart':
+        if j[config.get('Custom Field for Starting date')] == None and j[config.get('Custom Field for Ending date')] == None and j[config.get('Custom Field with hours')] !=None and j['Status'] == 'Niet gestart':
             labelsnietingepland.append(j['Lijst'])
     labelsnietingepland = list(dict.fromkeys(labelsnietingepland))
     for i,j in kaarten.items():
-        if j['Begindatum'] == None and j['Einddatum'] == None and j['Geplande uren'] !=None and j['Status'] == 'Niet gestart':
+        if j[config.get('Custom Field for Starting date')] == None and j[config.get('Custom Field for Ending date')] == None and j[config.get('Custom Field with hours')] !=None and j['Status'] == 'Niet gestart':
             tmp = []
             for label in labelsnietingepland:
                 if j['Lijst'] == label:
@@ -380,8 +402,8 @@ def get_data(value):
     tmpepicsforbarchart = {epic: 0 for epic in [name['Naam'] for name in kaarten.values() if name['Status'] in ['Epics Doing', 'Epics Done']]}
     tmpepicsforbarchart['Geen epic'] = 0
     for i,j in kaarten.items():
-        if j['Begindatum'] == None and j['Einddatum'] == None and j['Geplande uren'] !=None and j['Status'] == 'Niet gestart':
-            tmpepicsforbarchart[j['Epic']] += int(j['Geplande uren'])
+        if j[config.get('Custom Field for Starting date')] == None and j[config.get('Custom Field for Ending date')] == None and j[config.get('Custom Field with hours')] !=None and j['Status'] == 'Niet gestart':
+            tmpepicsforbarchart[j['Epic']] += int(j[config.get('Custom Field with hours')])
 
     epicsforbarchart = { k:v for k,v in tmpepicsforbarchart.items() if v!=0 }
 
@@ -517,7 +539,6 @@ def get_data(value):
             }
                     
     }
-
                                 
 #--! Create layout function. Only create a simple layout with a few components. The rest will be loaded using callbacks.
 def make_layout():
@@ -655,7 +676,7 @@ def create_maindiv(value, n_clicks):
                                     dcc.Dropdown(
                                         style = globals['styles']['dropdowns'],
                                         id='dropdownganttpersoon',
-                                        options=[{'label':name, 'value':name} for name in data['arrays']['persoon']],
+                                        options=[{'label':name, 'value':name} for name in data['arrays'][config.get('Custom Field for Person')]],
                                         ),
                                     dcc.Dropdown(
                                         style = globals['styles']['dropdowns'],
@@ -772,10 +793,10 @@ def create_maindiv(value, n_clicks):
                                     dcc.Dropdown(
                                         style = globals['styles']['dropdowns'],
                                         id='dropdownurenpermaand',
-                                        options=[{'label':name, 'value':name} for name in data['arrays']['categories'] if name != None],
+                                        options=[{'label':name, 'value':name} for name in data['arrays'][config.get('Custom Field for Categories')] if name != None],
                                         multi=True,
                                         searchable=False,
-                                        value = data['arrays']['categories']
+                                        value = data['arrays'][config.get('Custom Field for Categories')]
                                         ),
                                     html.Div(
                                         style=globals['styles']['divgraphs'],
@@ -1062,11 +1083,11 @@ def save_fnct(n_clicks):
 def update_ganttpersoon(v1, v2):
     ganttdata = []
     for i,j in data['kaarten'].items():
-        if j['Hoofdverantwoordelijke'] == v1 and j['Status'] != 'Archived' and j['Status'] in v2:
+        if j[config.get('Custom Field for Person')] == v1 and j['Status'] != 'Archived' and j['Status'] in v2:
             try:
                 ganttdata.append(dict(Task=j['Naam'],
-                                      Start=j['Begindatum'].date(),
-                                      Finish = j['Einddatum'].date(),
+                                      Start=j[config.get('Custom Field for Starting date')].date(),
+                                      Finish = j[config.get('Custom Field for Ending date')].date(),
                                       Resource=j['Epic']
                                      ))
             except:
@@ -1093,8 +1114,8 @@ def update_ganttepics(value):
         if j['Epic'] == value and j['Status'] != 'Archived':
             try:
                 ganttdata.append(dict(Task=j['Naam'],
-                                      Start=j['Begindatum'].date(),
-                                      Finish = j['Einddatum'].date(),
+                                      Start=j[config.get('Custom Field for Starting date')].date(),
+                                      Finish = j[config.get('Custom Field for Ending date')].date(),
                                       Resource=j['Status']
                                      ))
             except:
@@ -1123,7 +1144,7 @@ def update_urenpermaand(value):
     if 'Regulier werk' in value:
             yaxis = []
             for i in data['arrays']['perioden']:
-                yaxis.append(round(sum([value['urenperperiode'][i] for value in data['urenperdagperkaart'].values() if value['Categorie'] == 'Regulier werk']),0))
+                yaxis.append(round(sum([value['urenperperiode'][i] for value in data['urenperdagperkaart'].values() if value[config.get('Custom Field for Categories')] == 'Regulier werk']),0))
             bars.append(dict(x=data['arrays']['xaxis_months'],
                              y=yaxis,
                              name='Regulier werk',
@@ -1133,7 +1154,7 @@ def update_urenpermaand(value):
                             ))
                             
         
-    for categorie in data['arrays']['categories']:
+    for categorie in data['arrays'][config.get('Custom Field for Categories')]:
         if categorie in value and categorie != 'Regulier werk':
             if categorie == None:
                 categorienaam = 'Geen categorie'
@@ -1141,7 +1162,7 @@ def update_urenpermaand(value):
                 categorienaam = categorie
             yaxis = []
             for i in data['arrays']['perioden']:
-                yaxis.append(round(sum([value['urenperperiode'][i] for value in data['urenperdagperkaart'].values() if value['Categorie'] == categorie]),0))
+                yaxis.append(round(sum([value['urenperperiode'][i] for value in data['urenperdagperkaart'].values() if value[config.get('Custom Field for Categories')] == categorie]),0))
             bars.append(dict(x=data['arrays']['xaxis_months'],
                              y=yaxis,
                              name=categorienaam,
@@ -1169,7 +1190,7 @@ def update_urenpermaand(value):
 
 #--! App routes
 
-@app.server.route("/configuration/")
+@app.server.route("/dash/configuration/")
 def download_file():
 
     return flask.send_file('./configuration/configuration.txt',
@@ -1186,5 +1207,5 @@ def download_file():
 
 #--! Check if this is the main app and if so, run Dash!
 if __name__ == '__main__':
-    app.run_server(debug=False,host='0.0.0.0', port=8050)
+    app.run_server(debug=True,host='0.0.0.0', port=8051)
     
