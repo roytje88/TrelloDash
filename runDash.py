@@ -907,38 +907,38 @@ def create_maindiv(value, n_clicks):
 
 
                         ),
-                    dcc.Tab(
-                        style=globals['styles']['tabs'],  
-                        label='Configuratie',
-                        children=[
-                            html.Div(
-                                className='maindivs',
-                                style=globals['styles']['maindivs'],  
-                                children=[
-                                    html.H3('Uitleg'),
-                                    dcc.Markdown('''Klik op de button hieronder om de huidige configuratie te downloaden.'''),
-                                    html.A(id='export_link', href='/configuration/', children=[html.Button(id='export_button', type='button', children=['Export'])]),
+#                     dcc.Tab(
+#                         style=globals['styles']['tabs'],  
+#                         label='Configuratie',
+#                         children=[
+#                             html.Div(
+#                                 className='maindivs',
+#                                 style=globals['styles']['maindivs'],  
+#                                 children=[
+#                                     html.H3('Uitleg'),
+#                                     dcc.Markdown('''Klik op de button hieronder om de huidige configuratie te downloaden.'''),
+#                                     html.A(id='export_link', href='/dash/configuration/', children=[html.Button(id='export_button', type='button', children=['Export'])]),
 
-                                    dcc.Markdown('''Pas het bestand aan en upload deze hieronder.'''),
-                                    dcc.Upload(
-                                        id='configupload',
-                                        children=html.Div([
-                                            'Sleep het bestand of ',
-                                            html.A('selecteer het bestand')
+#                                     dcc.Markdown('''Pas het bestand aan en upload deze hieronder.'''),
+#                                     dcc.Upload(
+#                                         id='configupload',
+#                                         children=html.Div([
+#                                             'Sleep het bestand of ',
+#                                             html.A('selecteer het bestand')
 
-                                        ]),
-                                        style=globals['styles']['divgraphs'],
-                                        multiple=False,
+#                                         ]),
+#                                         style=globals['styles']['divgraphs'],
+#                                         multiple=False,
 
-                                        ),
+#                                         ),
                              
-                                    html.Div(id='confirmupload',style=globals['styles']['divgraphs'])
-                                    ]
-                                ),                           
-                            ]
+#                                     html.Div(id='confirmupload',style=globals['styles']['divgraphs'])
+#                                     ]
+#                                 ),                           
+#                             ]
 
 
-                        )                                                              
+#                         )                                                              
                     ]
                 )
             ]
@@ -986,7 +986,7 @@ def update_gantttactisch(v1):
                         ganttdata.append(dict(Task=j['Epic'],
                                             Start=start,
                                             Finish=eind,
-                                            Resource=j['Naam']
+                                            Resource=j['Naam'] + ' (uren: ' + str(round(data['urenperdagperkaart'][j['Naam']]['urenperperiode'][v1])) + ')'
                                             ))
                 except:
                     pass
@@ -1002,8 +1002,8 @@ def update_gantttactisch(v1):
         fig['layout'].update(paper_bgcolor='rgba(0,0,0,0)', 
                             plot_bgcolor='rgba(0,0,0,0)',)
 
-        fig.add_trace(go.Scatter(mode='lines', x=[v1[0:4]+'-'+v1[4:]+'-01',v1[0:4]+'-'+v1[4:]+'-01'],y=[-1,len(result)], line={'shape': 'spline', 'color': 'black', 'width': 4}))
-        fig.add_trace(go.Scatter(mode='lines', x=[v1plus1[0:4]+'-'+v1plus1[4:]+'-01',v1plus1[0:4]+'-'+v1plus1[4:]+'-01'],y=[-1,len(result)], line={'shape': 'spline', 'color': 'black', 'width': 4}))
+        fig.add_trace(go.Scatter(mode='lines', x=[v1[0:4]+'-'+v1[4:]+'-01',v1[0:4]+'-'+v1[4:]+'-01'],y=[-1,len(result)], line={'shape': 'spline', 'color': 'black', 'width': 4}, showlegend=False))
+        fig.add_trace(go.Scatter(mode='lines', x=[v1plus1[0:4]+'-'+v1plus1[4:]+'-01',v1plus1[0:4]+'-'+v1plus1[4:]+'-01'],y=[-1,len(result)], line={'shape': 'spline', 'color': 'black', 'width': 4}, showlegend=False))
         return fig               
     else:
         return {'data': [go.Pie()],'layout': go.Layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')}
@@ -1011,69 +1011,69 @@ def update_gantttactisch(v1):
 
 
 
-#---! configupload
-@app.callback(Output('confirmupload', 'children'),
-    [Input('configupload','contents')]
+# #---! configupload
+# @app.callback(Output('confirmupload', 'children'),
+#     [Input('configupload','contents')]
 
-)
-def confirm_upload(contents):
-    global newconfig
-    if contents is not None:
-        try:
-            newconfig = json.loads(base64.b64decode(contents[23:]).decode('ASCII'))
-            d = {}
-            for key,value in newconfig.items():
-                if type(value) == list:
-                    d[key] = ''
-                    for i in value:
-                        if d[key] == '':
-                            d[key] += i 
-                        else:
-                            if i == value[-1]:
-                                d[key] += (', '+i)
-                else:
-                    d[key] = value
+# )
+# def confirm_upload(contents):
+#     global newconfig
+#     if contents is not None:
+#         try:
+#             newconfig = json.loads(base64.b64decode(contents[23:]).decode('ASCII'))
+#             d = {}
+#             for key,value in newconfig.items():
+#                 if type(value) == list:
+#                     d[key] = ''
+#                     for i in value:
+#                         if d[key] == '':
+#                             d[key] += i 
+#                         else:
+#                             if i == value[-1]:
+#                                 d[key] += (', '+i)
+#                 else:
+#                     d[key] = value
 
-            return html.Div(
-                id='returneddiv',
-                style=globals['styles']['divgraphs'],
-                children=[ 
-                    dcc.Markdown('''Check hieronder of de juiste data is ingevoerd. Klik daarna daaronder op 'Opslaan'.'''),
-                    dash_table.DataTable(
-                        style_header={'backgroundColor': 'rgba(62,182,235,0.6)','color': 'black', 'fontWeight': 'bold', 'fontFamily': 'Arial'},
-                        style_cell = {'backgroundColor': 'rgba(62,182,235,0.2)', 'color': 'black','text-align': 'left', 'fontFamily': 'Arial'},                                                                
-                        columns=[{'name': 'Sleutel', 'id': 'Sleutel'}, {'name': 'Waarde', 'id': 'Waarde'}],
-                        data=[{'Sleutel': key, 'Waarde': value} for key, value in d.items()]
+#             return html.Div(
+#                 id='returneddiv',
+#                 style=globals['styles']['divgraphs'],
+#                 children=[ 
+#                     dcc.Markdown('''Check hieronder of de juiste data is ingevoerd. Klik daarna daaronder op 'Opslaan'.'''),
+#                     dash_table.DataTable(
+#                         style_header={'backgroundColor': 'rgba(62,182,235,0.6)','color': 'black', 'fontWeight': 'bold', 'fontFamily': 'Arial'},
+#                         style_cell = {'backgroundColor': 'rgba(62,182,235,0.2)', 'color': 'black','text-align': 'left', 'fontFamily': 'Arial'},                                                                
+#                         columns=[{'name': 'Sleutel', 'id': 'Sleutel'}, {'name': 'Waarde', 'id': 'Waarde'}],
+#                         data=[{'Sleutel': key, 'Waarde': value} for key, value in d.items()]
 
-                        ),
-                    html.Button(
-                        'Opslaan',
-                        id='save_button', 
-                        n_clicks=0
-                        ),
-                    html.Div(
-                        id='savedornot',
+#                         ),
+#                     html.Button(
+#                         'Opslaan',
+#                         id='save_button', 
+#                         n_clicks=0
+#                         ),
+#                     html.Div(
+#                         id='savedornot',
                         
-                        )
-                    ]
-                )
-        except:
-            return html.H5('Het bestand is incorrect. Download en upload opnieuw!')
+#                         )
+#                     ]
+#                 )
+#         except:
+#             return html.H5('Het bestand is incorrect. Download en upload opnieuw!')
 
-    else:
-        return
+#     else:
+#         return
 
 
-#---! save-button
-@app.callback(Output('savedornot','children'),
-    [Input('save_button','n_clicks'),])
-def save_fnct(n_clicks):
-    if n_clicks > 0:
-        with open('./configuration/configuration.txt','w') as outfile:
-            json.dump(newconfig, outfile, indent=4, sort_keys=True)
-        return 'Opgeslagen. Refresh de page.'
-    else:
-        return 
+# #---! save-button
+# @app.callback(Output('savedornot','children'),
+#     [Input('save_button','n_clicks'),])
+# def save_fnct(n_clicks):
+#     if n_clicks > 0:
+#         with open('./configuration/configuration.txt','w') as outfile:
+#             json.dump(newconfig, outfile, indent=4, sort_keys=True)
+#         return 'Opgeslagen. Refresh de page.'
+#     else:
+#         return 
 
 
 #---! ganttpersoon 
@@ -1149,7 +1149,8 @@ def update_urenpermaand(value):
                              y=yaxis,
                              name='Regulier werk',
                             line = {'shape': 'spline', 'smoothing': 0.4},
-                            mode='lines',
+                            mode='lines+markers',
+                            marker= {'symbol': 'triangle-up-open', 'size': 10},
                             stackgroup='one',                             
                             ))
                             
@@ -1167,7 +1168,8 @@ def update_urenpermaand(value):
                              y=yaxis,
                              name=categorienaam,
                             line = {'shape': 'spline', 'smoothing': 0.4},
-                            mode='lines',
+                            mode='lines+markers',
+                            marker= {'symbol': 'triangle-up-open', 'size': 10},
                             stackgroup='one',                             
                             ))
     yaxis = []
@@ -1207,5 +1209,5 @@ def download_file():
 
 #--! Check if this is the main app and if so, run Dash!
 if __name__ == '__main__':
-    app.run_server(debug=True,host='0.0.0.0', port=8051)
+    app.run_server(debug=False,host='0.0.0.0', port=8050)
     
