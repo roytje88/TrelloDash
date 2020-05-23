@@ -61,7 +61,6 @@ def update(c,template,file):
         print(file+': No difference in keys. Only updating version value')
         return(c)
     else:
-        print('done, remove this line when it works and remove # for line below')
         # add new entries
         for i in template.keys():
             if c.get(i) == None:
@@ -85,22 +84,23 @@ def load_update(file, template):
     # load file
     with open(file) as json_file:
         c = json.load(json_file)
-    # check if upgrade is needed
-    if file == configurationfile and float(c['Version']) < 2:
-        upgrade = template.copy()
-        upgrade.pop('Board ID')
-        upgrade.update({c['Board ID']:c.copy()})
-        upgrade[c['Board ID']].pop('Version')
-        upgrade[c['Board ID']].pop('Board ID')
-        c = upgrade
+    if file == configurationfile:
+        # check if upgrade is needed
+        if float(c['Version']) < 2:
+           upgrade = template.copy()
+           upgrade.pop('Board ID')
+           upgrade.update({c['Board ID']:c.copy()})
+           upgrade[c['Board ID']].pop('Version')
+           upgrade[c['Board ID']].pop('Board ID')
+           c = upgrade
         # itterate over boards
-        for boardid in c:
-            if boardid == 'Version':
+        for b in c:
+            if b == 'Version':
                 pass
             else:
-                update(c[boardid],template['Board ID'],boardid)
+                c[b] = update(c[b],template['Board ID'],i)
     else:
-        update(c,template,file)
+        c = update(c,template,file)
         
 ### error: first time it updates fine. seccond time output is Board Id: null
 
