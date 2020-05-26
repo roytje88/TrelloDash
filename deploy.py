@@ -98,7 +98,7 @@ def load_update(file, template):
             if b == 'Version':
                 pass
             else:
-                c[b] = update(c[b],template['Board ID'],i)
+                c[b] = update(c[b],template['Board ID'],file)
     else:
         c = update(c,template,file)
         
