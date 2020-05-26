@@ -81,6 +81,8 @@ def update(c,template,file):
         return(c)
 
 def load_update(file, template):
+    # backup existing file
+    shutil.copy(file,file[:-3]+"bak")
     # load file
     with open(file) as json_file:
         c = json.load(json_file)
@@ -102,8 +104,6 @@ def load_update(file, template):
     else:
         c = update(c,template,file)
         
-### error: first time it updates fine. seccond time output is Board Id: null
-
     # copy version from config_template to config
     c['Version'] = template['Version']
     # write dictionary to file
@@ -116,7 +116,7 @@ def new_fill(file, template):
         os.stat('./configuration')
     except:
         os.mkdir('./configuration')
-    # update all valuea in template
+    # update all values in template
     for i in template:
         # itertate through entries, checking for type and adjusting entry methode
         if i == '__Comment' or i == 'Version':
