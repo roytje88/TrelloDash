@@ -135,7 +135,7 @@ def new_fill(file, template):
     return c
 
 def add_board(file,template):
-    load_file(file)
+    c = load_file(file)
     c.update(new_fill(file, template))
     write_file(file,c)
 
@@ -158,13 +158,18 @@ def load(file):
         except:
             os.mkdir('./configuration')
         ## set dictionary for new file
+        print(file+' was not found. Creating new one.')
         newfile = template.copy()
         newfile.pop('Board ID')
+        print('Enter values for settings on promt.')
         newfile.update(new_fill(file, template))
         write_file(file,newfile)
         # write new file
     # add another Board?
-    add_board(file,template)
+    answer = 'yes'
+    while answer == 'yes':
+    	answer = input('Add another board? (yes/no)')
+    	add_board(file,template)
 #In[]
 # create, load or update files
 load(configurationfile)
