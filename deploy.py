@@ -9,8 +9,8 @@ import os,json,shutil
 configurationfile = './configuration/configuration.txt'
 credentialsfile = './configuration/credentials.txt'
 
-## define funcions for loading and updating files
 #In[]
+## define funcions for loading and updating files
 ## str
 def question_str(i):
     answer = input('Add value for '+i+': ')
@@ -91,7 +91,7 @@ def write_file(file, c):
 def load_update(file, template):
     # backup existing file
     shutil.copy(file,file[:-3]+"bak")
-    load_file(file)
+    c = load_file(file)
     if file == configurationfile:
         # check if upgrade is needed
         if float(c['Version']) < 2:
@@ -114,26 +114,32 @@ def load_update(file, template):
     c['Version'] = template['Version']
     # write dictionary to file
     write_file(file,c)
-
+#In[]
 def new_fill(file, template):
-    # copy template to dictionary for the file
-    c = template.copy()
-    # update all values in new dictionary
-    c.pop('Version')
-    for b,d in c.items():
+    if file == configurationfile:
+        c = template['Board ID'].copy()
         b = input('Board ID = ')
-        # itertate through entries, checking for type and adjusting entry methode
-        for i in d:
-            if i == '__Comment':
-                print('skipping '+i)
+    else:
+        c = template.copy()
+        c.pop('Version')
+    # itertate through entries, checking for type and adjusting entry methode
+    for i in c:
+        if i == '__Comment':
+            print('skipping '+i)
+        else:
+            if isinstance([i],dict):
+                for k,v in c[i].items():
+                    c[i][k] = question_per_type(k,type(v))
             else:
-                if isinstance(d[i],dict):
-                    for k,v in d[i].items():
-                        d[i][k] = question_per_type(k,type(v))
-                else:
-                    d[i] = question_per_type(i,type(d[i]))
-    return c
-
+                c[i] = question_per_type(i,type(c[i]))
+    # add board to return if configurationfile
+    if file == configurationfile:
+        d = {}
+        d.update({b:c})
+    else:
+        d = c
+    return d
+#In[]
 def add_board(file,template):
     c = load_file(file)
     c.update(new_fill(file, template))
@@ -160,16 +166,19 @@ def load(file):
         ## set dictionary for new file
         print(file+' was not found. Creating new one.')
         newfile = template.copy()
-        newfile.pop('Board ID')
-        print('Enter values for settings on promt.')
+        if file == configurationfile:
+            newfile.pop('Board ID')
+        print('Enter values for settings on prompt.')
         newfile.update(new_fill(file, template))
         write_file(file,newfile)
         # write new file
-    # add another Board?
-    answer = 'yes'
-    while answer == 'yes':
-    	answer = input('Add another board? (yes/no)')
-    	add_board(file,template)
+    if file == configurationfile:
+        # add another Board?
+        answer = input('Add another board? (yes/no) ')
+        while answer == 'yes':
+            add_board(file,template)
+            answer = input('Add another board? (yes/no) ')
+
 #In[]
 # create, load or update files
 load(configurationfile)
