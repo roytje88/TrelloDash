@@ -2,12 +2,56 @@
 # coding: utf-8
 
 #In[]
+import toml
+
+# file location
+configfile = './configuration/config.toml'
+authfile = './configuration/auth.toml'
+
+def new_file():
+    # create new file when none exists
+    pass
+
+def add_board():
+    # add config for new board
+    pass
+
+
+def write():
+    # write changes to file
+
+def load():
+    #open file
+    config = toml.load(configurationfile)
+
+
+def upgrade_file():
+    # upgrade file following changes in config_template
+    pass
+
+def update_file():
+    # make changes to values
+    pass
+
+def delete_board():
+    # remove board from settings
+    pass
+
+
+# configfile
+def run():
+    # do action
+
+run(config)
+run(auth)
+
+#In[]
+#### old code
 import os,json,shutil
 
 # start setup
 ## set files locations
-configurationfile = './configuration/configuration.txt'
-credentialsfile = './configuration/credentials.txt'
+
 
 #In[]
 ## define funcions for loading and updating files
