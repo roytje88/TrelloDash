@@ -588,8 +588,10 @@ def make_layout():
 
 
             html.Button('Data verversen', id='refreshdatabtn', n_clicks=0),
-            html.Div(
-                id='test'
+            dcc.Loading(id='test',
+                       type='default',
+                        
+                        
                 )
             ]
     )#/firstdiv    
@@ -597,14 +599,13 @@ def make_layout():
 #--! Get CSS files and scripts and set App (including layout)        
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 external_scripts = ['https://cdn.plot.ly/plotly-locale-nl-latest.js']
-app = dash.Dash(__name__, external_stylesheets=external_stylesheets,external_scripts=external_scripts, url_base_pathname='/dash/')
+app = dash.Dash(__name__, external_stylesheets=external_stylesheets,external_scripts=external_scripts, url_base_pathname='/dash_dev/')
 app.layout = make_layout
 #--! Set Dash to suppress callback exceptions, because some callbacks can only be made when the first callback in the main layout has been made.
 app.config['suppress_callback_exceptions'] = True
 
 
-
-#--! Define app callbacks
+#--! Define app callbacks 
 
 #---! dropdown_boards
     # This function should be changed when more boards are added. For now, only Werkvoorraad is compatible.
@@ -653,20 +654,26 @@ def create_maindiv(value, n_clicks):
                             html.Div(
                                 className='tab2_div2',
                                 style=globals['styles']['maindivs'],
+                                loading_state={'is_loading': False},
                                 children=[
                                     html.H4('Gantt per epic'),
                                     dcc.Dropdown(
+                                        loading_state={'is_loading': False},
                                         style = globals['styles']['dropdowns'],
                                         id='dropdownganttepics',
                                         options=[{'label':name, 'value':name} for name in data['arrays']['epics']],
                                         value = [next(iter(data['arrays']['epics']))]
                                         ),
-                                    html.Div(
-                                        style=globals['styles']['divgraphs'],
-                                        children=[                                        
-                                            dcc.Graph(id='ganttepics'),
-                                            ]
-                                        ),
+                                    dcc.Loading(
+                                        children=[
+                                        html.Div(
+                                            loading_state={'is_loading': False},
+                                            style=globals['styles']['divgraphs'],
+                                            children=[                                        
+                                                dcc.Graph(id='ganttepics'),
+                                                ]
+                                            ),
+                                        ]),
                                     ]
                                 ),
                             html.Div(
@@ -678,6 +685,7 @@ def create_maindiv(value, n_clicks):
                                         style = globals['styles']['dropdowns'],
                                         id='dropdownganttpersoon',
                                         options=[{'label':name, 'value':name} for name in data['arrays'][config.get('Custom Field for Person')]],
+                                        value=data['arrays'][config.get('Custom Field for Person')][0]
                                         ),
                                     dcc.Dropdown(
                                         style = globals['styles']['dropdowns'],
@@ -686,16 +694,46 @@ def create_maindiv(value, n_clicks):
                                         value = data['arrays']['statuses'],
                                         multi=True,
                                         ),
-                                        
-                                    html.Div(
-                                        style=globals['styles']['divgraphs'],
-                                        children=[                                        
-                                            dcc.Graph(id='ganttpersoon'),
-                                            ]
-                                        ),
+                                    dcc.Loading(
+                                        children=[
+                                        html.Div(
+                                            style=globals['styles']['divgraphs'],
+                                            children=[                                        
+                                                dcc.Graph(id='ganttpersoon'),
+                                                ]
+                                            ),
+                                        ],),
                                     ]
                                 ),                                
                             ]
+                        ),
+                    dcc.Tab(
+                        label='Scripts',
+                        style=globals['styles']['tabs'],
+                        children = [
+                            html.Div(
+                                className='tabx_divx',
+                                style=globals['styles']['maindivs'],
+                                children=[
+                                    dcc.Markdown('Met onderstaande knop kan het bord worden opgeruimd.'),
+                                    dcc.Markdown('Alle kaarten die minstens ' + config.get('Maximum days a card can be in Done') + ' dagen in Done staan, worden gearchiveerd.'),
+                                    html.Button('Ruim op!', id='cleanboardbtn', n_clicks=0),
+                                    dcc.Loading(children=[
+                                        html.Div(
+                                            id='archivedcards',
+                                            style=globals['styles']['divgraphs'],
+                                            ),
+                                        ]),
+
+                                    ]
+                                ),                            
+                            ]
+
+                        
+                        
+                        
+                    
+                    
                         ),
                     dcc.Tab(
                         label='Data export',
@@ -799,12 +837,14 @@ def create_maindiv(value, n_clicks):
                                         searchable=False,
                                         value = data['arrays'][config.get('Custom Field for Categories')]
                                         ),
-                                    html.Div(
-                                        style=globals['styles']['divgraphs'],
-                                        children=[                                    
-                                            dcc.Graph(id='urenpermaand')
-                                           ]
-                                        ),
+                                    dcc.Loading(children=[
+                                        html.Div(
+                                            style=globals['styles']['divgraphs'],
+                                            children=[                                    
+                                                dcc.Graph(id='urenpermaand')
+                                               ]
+                                            ),
+                                        ])
                                     ]
                                 ),
                             html.Div(
@@ -893,14 +933,16 @@ def create_maindiv(value, n_clicks):
                                         searchable=False,
                                         value = data['arrays']['threemonths'][0][0],
                                         ),
-                                    html.Div(
-                                        style=globals['styles']['divgraphs'],
-                                        children=[
-                                            dcc.Graph(id='gantttactisch'
-                                                )
-                                                
-                                            ]
-                                        )
+                                    dcc.Loading(children=[
+                                        html.Div(
+                                            style=globals['styles']['divgraphs'],
+                                            children=[
+                                                dcc.Graph(id='gantttactisch'
+                                                    )
+
+                                                ]
+                                            )
+                                        ])
 
                                     ]
                                 ),
@@ -944,6 +986,49 @@ def create_maindiv(value, n_clicks):
                 )
             ]
         )
+
+#---! Cleanboardbtn
+@app.callback(Output('archivedcards', 'children'),
+    [Input('cleanboardbtn', 'n_clicks')]
+    )
+
+def cleanboard(n_clicks):
+    if n_clicks>0:
+        cardsforactions = []
+        for i,j in data['kaarten'].items():
+            if j['Status'] == 'Done' and j['Gearchiveerd'] != True:
+                cardsforactions.append(i)
+        archivedcards=[]
+
+        for i in cardsforactions:
+            url = 'https://api.trello.com/1/cards/'+i+'/actions?key='+credentials.get('API key')+'&token='+credentials.get('API token')
+            temp = json.loads(json.dumps(requests.get(url).json()))
+            dates = []
+            for j in temp:
+                for k,l in j.items():
+                    if k == 'data':
+
+                        try:
+                            if l['listAfter']['name'] == 'Done':
+                                dates.append(j['date'])
+                        except:
+                            pass
+            date = max(dates) 
+            maxdate = datetime.now().date() - timedelta(days = int(config['Maximum days a card can be in Done']))
+            if datetime.strptime(max(dates)[:10], '%Y-%m-%d').date()<maxdate:
+                archivedcards.append(data['kaarten'][i]['Naam'])
+                url_post = "https://api.trello.com/1/cards/"+i
+                querystring = {"closed":"true","key":credentials.get('API key'),"token":credentials.get('API token')}
+                resp = requests.request("PUT", url_post, params=querystring)
+                resp  
+        if archivedcards != []:
+            returned = 'Gearchiveerde kaarten: '
+            for x in archivedcards:
+                if x !=archivedcards[-1]:
+                    returned += (x + ', ')
+                else:
+                    returned += x
+            return returned
 
 
 #---! gantttactisch
@@ -1210,5 +1295,5 @@ def download_file():
 
 #--! Check if this is the main app and if so, run Dash!
 if __name__ == '__main__':
-    app.run_server(debug=False,host='0.0.0.0', port=8050)
+    app.run_server(debug=True,host='0.0.0.0', port=8051)
     
