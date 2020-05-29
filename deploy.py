@@ -5,13 +5,12 @@
 import os,json,shutil
 
 # start setup
-## load files
-### set files locations
+## set files locations
 configurationfile = './configuration/configuration.txt'
 credentialsfile = './configuration/credentials.txt'
 
-### define funcions for loading and updating files
 #In[]
+## define funcions for loading and updating files
 ## str
 def question_str(i):
     answer = input('Add value for '+i+': ')
@@ -55,13 +54,11 @@ def question_per_type(i,t):
         print('ADDING BOOLEAN FOR '+str(i)+': '+str(answer))
         return answer
 
-def load_update(file, template):
-    # load file
-    with open(file) as json_file:
-        c = json.load(json_file)
+def update(c,template,file):
     # check if update is needed
     if c.keys() == template.keys():
         print(file+': No difference in keys. Only updating version value')
+        return(c)
     else:
         # add new entries
         for i in template.keys():
@@ -79,46 +76,109 @@ def load_update(file, template):
         for j in remove:
             c.pop(j)
             print("removed: "+j)
-        print(file+": File is synced with new template, and values wil be added to file.")
-    # copy version from config_template to config
-    c['Version'] = template['Version']
-    # write dictionary to file
+            print(file+": File is synced with new template, and values wil be added to file.")
+        return(c)
+
+def load_file(file):
+    with open(file) as json_file:
+        c = json.load(json_file)
+    return c
+
+def write_file(file, c):
     with open(file, 'w') as outfile:
         json.dump(c, outfile, indent=4, sort_keys=True)
 
+def load_update(file, template):
+    # backup existing file
+    shutil.copy(file,file[:-3]+"bak")
+    c = load_file(file)
+    if file == configurationfile:
+        # check if upgrade is needed
+        if float(c['Version']) < 2:
+           upgrade = template.copy()
+           upgrade.pop('Board ID')
+           upgrade.update({c['Board ID']:c.copy()})
+           upgrade[c['Board ID']].pop('Version')
+           upgrade[c['Board ID']].pop('Board ID')
+           c = upgrade
+        # itterate over boards
+        for b in c:
+            if b == 'Version':
+                pass
+            else:
+                c[b] = update(c[b],template['Board ID'],file)
+    else:
+        c = update(c,template,file)
+        
+    # copy version from config_template to config
+    c['Version'] = template['Version']
+    # write dictionary to file
+    write_file(file,c)
+#In[]
 def new_fill(file, template):
-    #check if folder exists, githelse create it
-    try:
-        os.stat('./configuration')
-    except:
-        os.mkdir('./configuration')
-    # update all valuea in template
-    for i in template:
-        # itertate through entries, checking for type and adjusting entry methode
-        if i == '__Comment' or i == 'Version':
+    if file == configurationfile:
+        c = template['Board ID'].copy()
+        b = input('Board ID = ')
+    else:
+        c = template.copy()
+        c.pop('Version')
+    # itertate through entries, checking for type and adjusting entry methode
+    for i in c:
+        if i == '__Comment':
             print('skipping '+i)
         else:
-            if isinstance(template[i],dict):
-                for k,v in template[i].items():
-                    template[i][k] = question_per_type(k,type(v))
+            if isinstance([i],dict):
+                for k,v in c[i].items():
+                    c[i][k] = question_per_type(k,type(v))
             else:
-                template[i] = question_per_type(i,type(template[i]))
-    # write values to file
-    with open(file, 'w') as outfile:
-        json.dump(template, outfile, indent=4, sort_keys=True)
+                c[i] = question_per_type(i,type(c[i]))
+    # add board to return if configurationfile
+    if file == configurationfile:
+        d = {}
+        d.update({b:c})
+    else:
+        d = c
+    return d
+#In[]
+def add_board(file,template):
+    c = load_file(file)
+    c.update(new_fill(file, template))
+    write_file(file,c)
 
 def load(file):
+    # set template
     if file == configurationfile:
         with open('./templates/configuration_template.txt') as json_file:
             template = json.load(json_file)
     else:
         with open('./templates/credentials_template.txt') as json_file:
             template = json.load(json_file)
-
+    # load existing or creaing new file
     try:
         load_update(file, template)
     except:
-        new_fill(file, template)
+        # create new file
+        ## check if folder exists, githelse create it
+        try:
+            os.stat('./configuration')
+        except:
+            os.mkdir('./configuration')
+        ## set dictionary for new file
+        print(file+' was not found. Creating new one.')
+        newfile = template.copy()
+        if file == configurationfile:
+            newfile.pop('Board ID')
+        print('Enter values for settings on prompt.')
+        newfile.update(new_fill(file, template))
+        write_file(file,newfile)
+        # write new file
+    if file == configurationfile:
+        # add another Board?
+        answer = input('Add another board? (yes/no) ')
+        while answer == 'yes':
+            add_board(file,template)
+            answer = input('Add another board? (yes/no) ')
+
 #In[]
 # create, load or update files
 load(configurationfile)
