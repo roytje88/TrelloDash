@@ -495,7 +495,7 @@ def get_data(value):
         value = gaugegeplandthismonth,
         mode = "gauge+number+delta",
         title = {'text': "Totale uren voor " + datetime.strptime(thismonth,'%Y%m').strftime('%B')},
-        delta = {'reference': deltathismonth},
+        delta = {'reference': gaugegeplandthismonth*2 - deltathismonth},
         gauge = gaugestepsthismonth
     ))
     gaugefig.add_trace(go.Indicator(
@@ -503,7 +503,7 @@ def get_data(value):
         value = gaugegeplandnextmonth,
         mode = "gauge+number+delta",
         title = {'text': "Totale uren voor " + datetime.strptime(nextmonth,'%Y%m').strftime('%B')},
-        delta = {'reference': deltanextmonth},
+        delta = {'reference': gaugegeplandnextmonth*2 - deltanextmonth},
         gauge = gaugestepsnextmonth
     ))    
     gaugefig.add_trace(go.Indicator(
@@ -511,7 +511,7 @@ def get_data(value):
         value = gaugegeplandtwomonths,
         mode = "gauge+number+delta",
         title = {'text': "Totale uren voor " + datetime.strptime(twomonths,'%Y%m').strftime('%B')},
-        delta = {'reference': deltatwomonths},
+        delta = {'reference': gaugegeplandtwomonths*2 - deltatwomonths},
         gauge = gaugestepstwomonths
     ))     
 
