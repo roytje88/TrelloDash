@@ -9,7 +9,17 @@ from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
 from dash.dependencies import Input, Output
 from datetime import date,datetime,timedelta,time
 from dateutil.relativedelta import relativedelta
- 
+
+
+#--! Turn on/off development mode
+development = True
+
+
+if development == True:
+    dash_settings = {'debug': True, 'url': 'dash_dev', 'port': 8051}
+else:
+    dash_settings = {'debug': False, 'url': 'dash', 'port': 8050}
+
 #--! Check if app is deployed
 try:
     with open('./configuration/credentials.txt') as json_file:
@@ -485,7 +495,7 @@ def get_data(value):
         value = gaugegeplandthismonth,
         mode = "gauge+number+delta",
         title = {'text': "Totale uren voor " + datetime.strptime(thismonth,'%Y%m').strftime('%B')},
-        delta = {'reference': deltathismonth},
+        delta = {'reference': gaugegeplandthismonth*2 - deltathismonth},
         gauge = gaugestepsthismonth
     ))
     gaugefig.add_trace(go.Indicator(
@@ -493,7 +503,7 @@ def get_data(value):
         value = gaugegeplandnextmonth,
         mode = "gauge+number+delta",
         title = {'text': "Totale uren voor " + datetime.strptime(nextmonth,'%Y%m').strftime('%B')},
-        delta = {'reference': deltanextmonth},
+        delta = {'reference': gaugegeplandnextmonth*2 - deltanextmonth},
         gauge = gaugestepsnextmonth
     ))    
     gaugefig.add_trace(go.Indicator(
@@ -501,7 +511,7 @@ def get_data(value):
         value = gaugegeplandtwomonths,
         mode = "gauge+number+delta",
         title = {'text': "Totale uren voor " + datetime.strptime(twomonths,'%Y%m').strftime('%B')},
-        delta = {'reference': deltatwomonths},
+        delta = {'reference': gaugegeplandtwomonths*2 - deltatwomonths},
         gauge = gaugestepstwomonths
     ))     
 
@@ -599,7 +609,7 @@ def make_layout():
 #--! Get CSS files and scripts and set App (including layout)        
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 external_scripts = ['https://cdn.plot.ly/plotly-locale-nl-latest.js']
-app = dash.Dash(__name__, external_stylesheets=external_stylesheets,external_scripts=external_scripts, url_base_pathname='/dash_dev/')
+app = dash.Dash(__name__, external_stylesheets=external_stylesheets,external_scripts=external_scripts, url_base_pathname='/'+dash_settings.get('url')+'/')
 app.layout = make_layout
 #--! Set Dash to suppress callback exceptions, because some callbacks can only be made when the first callback in the main layout has been made.
 app.config['suppress_callback_exceptions'] = True
@@ -1295,5 +1305,5 @@ def download_file():
 
 #--! Check if this is the main app and if so, run Dash!
 if __name__ == '__main__':
-    app.run_server(debug=True,host='0.0.0.0', port=8051)
-    
+    app.run_server(debug=dash_settings.get('debug'),host='0.0.0.0', port=dash_settings.get('port'))
+
